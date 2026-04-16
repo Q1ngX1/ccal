@@ -228,7 +228,7 @@ def _parse_with_retry(text: str, provider: str | None = None, model: str | None 
             return parse_event(text, provider=provider, model=model)
         except Exception as e:
             last_error = e
-            if attempt < retries and "JSON" in str(e).__class__.__name__ or "json" in str(e).lower():
+            if attempt < retries and ("JSON" in type(e).__name__ or "json" in str(e).lower()):
                 print(f"[yellow]Parse attempt {attempt} failed, retrying...[/yellow]")
             else:
                 break

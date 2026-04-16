@@ -20,6 +20,12 @@ dependencies = [
 [project.scripts]
 ccal = "src.main:main"
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=6.0",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
