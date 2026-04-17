@@ -34,6 +34,13 @@ uv sync
 
 If you want a ready-to-run command-line executable, download the asset for your platform from the GitHub Releases page. The release binaries are built for Linux, macOS, and Windows, and they include the core CLI without the optional OCR extra.
 
+Typical filenames look like:
+
+- `ccal-vX.Y.Z-linux-x86_64`
+- `ccal-vX.Y.Z-windows-x86_64.exe`
+- `ccal-vX.Y.Z-macos-x86_64`
+- `ccal-vX.Y.Z-macos-arm64`
+
 After downloading:
 
 - Linux and macOS:

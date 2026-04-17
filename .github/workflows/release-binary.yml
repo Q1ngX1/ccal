@@ -1,6 +1,7 @@
 name: Build and Publish Release Binaries
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*.*.*"
@@ -45,27 +46,35 @@ jobs:
       - name: Build executable
         run: uv run pyinstaller --onefile --clean --name ccal --paths . src/main.py
 
+      - name: Verify executable
+        shell: bash
+        run: |
+          uv run python - <<'PY'
+          import subprocess
+          from pathlib import Path
+
+          binary = Path("dist") / ("ccal.exe" if Path("dist/ccal.exe").exists() else "ccal")
+          subprocess.run([str(binary), "--help"], check=True)
+          PY
+
       - name: Stage release asset
         shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p release-assets
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            source_path="dist/ccal.exe"
-          else
-            source_path="dist/ccal"
-          fi
-          asset_name="ccal-${GITHUB_REF_NAME}-${{ matrix.name }}${{ matrix.exe_suffix }}"
-          cp "$source_path" "release-assets/$asset_name"
-          python - <<'PY'
-from pathlib import Path
-import hashlib
-import os
+          uv run python - <<'PY'
+          from hashlib import sha256
+          from pathlib import Path
+          import os
+          import shutil
 
-asset = Path("release-assets") / os.environ["ASSET_NAME"]
-digest = hashlib.sha256(asset.read_bytes()).hexdigest()
-Path(str(asset) + ".sha256").write_text(f"{digest}  {asset.name}\n", encoding="utf-8")
-PY
+          asset_dir = Path("release-assets")
+          asset_dir.mkdir(exist_ok=True)
+          source = Path("dist") / ("ccal.exe" if Path("dist/ccal.exe").exists() else "ccal")
+          asset_name = os.environ["ASSET_NAME"]
+          target = asset_dir / asset_name
+          shutil.copy2(source, target)
+          digest = sha256(target.read_bytes()).hexdigest()
+          (asset_dir / f"{asset_name}.sha256").write_text(f"{digest}  {asset_name}\n", encoding="utf-8")
+          PY
         env:
           ASSET_NAME: ccal-${{ github.ref_name }}-${{ matrix.name }}${{ matrix.exe_suffix }}
 

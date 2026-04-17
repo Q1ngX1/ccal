@@ -34,6 +34,13 @@ uv sync
 
 如果你想直接下载可运行的命令行程序，可以到 GitHub Releases 页面下载对应平台的产物。发布的二进制会覆盖 Linux、macOS 和 Windows，并且只包含核心 CLI，不包含可选的 OCR 额外依赖。
 
+常见文件名会类似：
+
+- `ccal-vX.Y.Z-linux-x86_64`
+- `ccal-vX.Y.Z-windows-x86_64.exe`
+- `ccal-vX.Y.Z-macos-x86_64`
+- `ccal-vX.Y.Z-macos-arm64`
+
 下载后：
 
 - Linux / macOS：
