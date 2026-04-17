@@ -30,5 +30,10 @@ Thumbs.db
 # Generated ICS files
 *.ics
 
+# Local Google OAuth files
+google_credentials.json
+google_cresntials.json
+google_token_*.json
+
 # local image test folder
 .imgs/
