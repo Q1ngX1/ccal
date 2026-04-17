@@ -122,13 +122,17 @@ def _require_complete_event(event: EventLike) -> CalendarEvent:
     return event.to_calendar_event()
 
 
+class IncompleteEventError(Exception):
+    """Raised when an event cannot be output yet because it is still incomplete."""
+
+
 def output_event(event: EventLike, output: str | None) -> None:
     """Output event to the chosen destination."""
     try:
         event = _require_complete_event(event)
     except ValueError:
         print(f"[red]Event '{event.title}' is missing start_time. Edit it or remove it before output.[/red]")
-        raise typer.Exit(1)
+        raise IncompleteEventError(event.title)
 
     config = load_config()
     output_method = output or config["output"]["default"]
@@ -161,18 +165,20 @@ def output_event(event: EventLike, output: str | None) -> None:
         print(f"[green]ICS file saved:[/green] {path}")
 
 
-def output_events(events: EventLike | list[EventLike], output: str | None) -> None:
-    """Output all selected events."""
+def output_events(events: EventLike | list[EventLike], output: str | None) -> bool:
+    """Output all selected events. Returns False if any event is still incomplete."""
     event_list = _as_list(events)
     for event in event_list:
         try:
             _require_complete_event(event)
         except ValueError:
             print(f"[red]Event '{event.title}' is missing start_time. Edit it or remove it before output.[/red]")
-            raise typer.Exit(1)
+            return False
 
     for event in event_list:
         output_event(event, output)
+
+    return True
 
 
 def confirm_and_output(event: EventLike | list[EventLike], output: str | None, yes: bool = False) -> None:
@@ -215,18 +221,26 @@ def confirm_and_output(event: EventLike | list[EventLike], output: str | None, y
                 raise typer.Exit()
             # next_choice == "e" → loop again
 
-    output_event(event, output)
+    while True:
+        try:
+            output_event(event, output)
+            return
+        except IncompleteEventError:
+            print("[yellow]Please edit the event before outputting it.[/yellow]")
+            event = edit_event(event)
+            display_event(event)
 
 
 def confirm_and_output_many(events: list[EventLike], output: str | None, yes: bool = False) -> None:
     """Confirm, edit, remove, and output multiple parsed events."""
     display_events(events)
 
-    if yes:
-        output_events(events, output)
-        return
-
     while True:
+        if yes:
+            if output_events(events, output):
+                return
+            raise typer.Exit(1)
+
         choice = Prompt.ask(
             "\n[bold]Confirm all?[/bold] [Y]es all / [N]o / [E]dit event / [R]emove event",
             choices=["y", "n", "e", "r"],
@@ -234,8 +248,10 @@ def confirm_and_output_many(events: list[EventLike], output: str | None, yes: bo
         )
 
         if choice == "y":
-            output_events(events, output)
-            return
+            if output_events(events, output):
+                return
+            display_events(events)
+            continue
         if choice == "n":
             print("[yellow]Cancelled.[/yellow]")
             raise typer.Exit()

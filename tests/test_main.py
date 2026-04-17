@@ -373,16 +373,20 @@ class TestConfirmAndOutput:
         assert (tmp_path / "Keep.ics").exists()
         assert not (tmp_path / "Remove.ics").exists()
 
-    def test_multiple_missing_time_blocks_output_before_writing(self, tmp_path, monkeypatch):
+    def test_multiple_missing_time_retries_after_edit(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         events = [
             CalendarEvent(title="Complete", start_time=datetime(2026, 4, 20, 10, 0), timezone="UTC"),
             ParsedCalendarEvent(title="Needs Time", start_time=None, timezone="UTC"),
         ]
-        with patch("src.main.Prompt.ask", return_value="y"):
-            with pytest.raises((SystemExit, typer.Exit)):
-                confirm_and_output(events, "ics", yes=False)
-        assert not list(tmp_path.glob("*.ics"))
+        edited = CalendarEvent(title="Needs Time", start_time=datetime(2026, 4, 21, 10, 0), timezone="UTC")
+        with (
+            patch("src.main.Prompt.ask", side_effect=["y", "e", "2", "y"]),
+            patch("src.main.edit_event", return_value=edited),
+            patch("src.main.load_config", return_value={"output": {"default": "ics"}}),
+        ):
+            confirm_and_output(events, "ics", yes=False)
+        assert len(list(tmp_path.glob("*.ics"))) == 2
 
 
 # ── edit_event tests ─────────────────────────────────────────────────
