@@ -44,7 +44,7 @@ jobs:
         run: uv pip install pyinstaller
 
       - name: Build executable
-        run: uv run pyinstaller --onefile --clean --name ccal --paths . src/main.py
+        run: uv run pyinstaller --onefile --clean --name ccal --paths . --collect-data litellm src/main.py
 
       - name: Verify executable
         shell: bash
