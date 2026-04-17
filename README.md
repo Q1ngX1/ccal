@@ -30,6 +30,22 @@ cd ccal
 uv sync
 ```
 
+### Prebuilt binaries
+
+If you want a ready-to-run command-line executable, download the asset for your platform from the GitHub Releases page. The release binaries are built for Linux, macOS, and Windows, and they include the core CLI without the optional OCR extra.
+
+After downloading:
+
+- Linux and macOS:
+  ```bash
+  chmod +x ccal
+  ./ccal --help
+  ```
+- Windows:
+  ```powershell
+  .\ccal.exe --help
+  ```
+
 ## Quick Start
 
 ### 1. Setup

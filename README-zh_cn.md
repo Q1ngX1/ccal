@@ -30,6 +30,22 @@ cd ccal
 uv sync
 ```
 
+### 预编译二进制
+
+如果你想直接下载可运行的命令行程序，可以到 GitHub Releases 页面下载对应平台的产物。发布的二进制会覆盖 Linux、macOS 和 Windows，并且只包含核心 CLI，不包含可选的 OCR 额外依赖。
+
+下载后：
+
+- Linux / macOS：
+  ```bash
+  chmod +x ccal
+  ./ccal --help
+  ```
+- Windows：
+  ```powershell
+  .\ccal.exe --help
+  ```
+
 ## 快速开始
 
 ### 1. 初始配置
