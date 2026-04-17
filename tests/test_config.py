@@ -5,6 +5,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
+import tomllib
+
 from src.config import (
     load_config,
     save_config,
@@ -42,6 +44,13 @@ class TestLoadConfig:
             config = load_config()
         assert config["apple"]["calendar_name"] == "Work"
 
+    def test_invalid_toml_falls_back_to_defaults(self, tmp_path):
+        fake_file = tmp_path / "config.toml"
+        fake_file.write_text('google = "C:\\Users\\test\\google_credentials.json"')
+        with patch("src.config.CONFIG_FILE", fake_file):
+            config = load_config()
+        assert config["google"]["calendar_id"] == DEFAULT_CONFIG["google"]["calendar_id"]
+
 
 class TestSaveConfig:
     def test_saves_and_reloads(self, tmp_path):
@@ -67,6 +76,18 @@ class TestSaveConfig:
             content = fake_file.read_text()
         assert "flag = true" in content
         assert "count = 42" in content
+
+    def test_escapes_windows_paths(self, tmp_path):
+        fake_dir = tmp_path / "ccal"
+        fake_file = fake_dir / "config.toml"
+        path = r"C:\Users\zansh\Code\ccal\google_credentials.json"
+        config = {"google": {"credentials_path": path, "calendar_id": "primary"}}
+        with patch("src.config.CONFIG_DIR", fake_dir), patch("src.config.CONFIG_FILE", fake_file):
+            save_config(config)
+            content = fake_file.read_text()
+        assert 'credentials_path = "C:\\\\Users\\\\zansh\\\\Code\\\\ccal\\\\google_credentials.json"' in content
+        parsed = tomllib.loads(content)
+        assert parsed["google"]["credentials_path"] == path
 
 
 class TestApiKey:

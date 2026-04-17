@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import tomllib
 from pathlib import Path
@@ -30,8 +31,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
 def load_config() -> dict[str, Any]:
     """Load config from ~/.config/ccal/config.toml, falling back to defaults."""
     if CONFIG_FILE.exists():
-        with open(CONFIG_FILE, "rb") as f:
-            user_config = tomllib.load(f)
+        try:
+            with open(CONFIG_FILE, "rb") as f:
+                user_config = tomllib.load(f)
+        except tomllib.TOMLDecodeError:
+            return DEFAULT_CONFIG.copy()
         # Merge with defaults
         config = DEFAULT_CONFIG.copy()
         for section, values in user_config.items():
@@ -52,7 +56,7 @@ def save_config(config: dict[str, Any]) -> None:
             lines.append(f"[{section}]")
             for key, val in values.items():
                 if isinstance(val, str):
-                    lines.append(f'{key} = "{val}"')
+                    lines.append(f"{key} = {json.dumps(val, ensure_ascii=False)}")
                 elif isinstance(val, bool):
                     lines.append(f"{key} = {'true' if val else 'false'}")
                 elif isinstance(val, int | float):
