@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 from datetime import datetime
+from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
@@ -616,41 +617,16 @@ def setup():
         )
         config["output"]["default"] = output_default
 
+        configure_google_calendar = typer.confirm(
+            "Configure Google Calendar API now?",
+            default=(output_default == "google"),
+        )
+        if configure_google_calendar:
+            _setup_google_calendar(config)
+
         # Apple Calendar setup (macOS)
         if output_default == "apple":
-            from src.connections.apple_calendar import list_calendars as apple_list_calendars
-            try:
-                calendars = apple_list_calendars()
-                if calendars:
-                    print(f"[dim]Available calendars: {', '.join(calendars)}[/dim]")
-                cal_name = Prompt.ask("Apple Calendar name", default=config.get("apple", {}).get("calendar_name", "Home"))
-                config.setdefault("apple", {})["calendar_name"] = cal_name
-            except Exception as e:
-                print(f"[yellow]Could not list calendars: {e}[/yellow]")
-                cal_name = Prompt.ask("Apple Calendar name", default="Home")
-                config.setdefault("apple", {})["calendar_name"] = cal_name
-
-        # Google Calendar setup
-        if output_default == "google":
-            from src.config import get_google_credentials_path
-
-            creds_path = get_google_credentials_path()
-            if not creds_path.exists():
-                print(f"\n[yellow]To use Google Calendar, place your OAuth credentials JSON at:[/yellow]")
-                print(f"  {creds_path}")
-                print("[dim]Download it from Google Cloud Console > APIs & Services > Credentials[/dim]")
-            else:
-                print("[green]Google OAuth credentials found.[/green]")
-                if typer.confirm("Authenticate with Google now?", default=True):
-                    from src.connections.google_calendar import authenticate
-                    try:
-                        authenticate()
-                        print("[green]Google Calendar authenticated successfully![/green]")
-                    except Exception as e:
-                        print(f"[red]Authentication failed:[/red] {e}")
-
-            calendar_id = Prompt.ask("Google Calendar ID", default=config["google"]["calendar_id"])
-            config["google"]["calendar_id"] = calendar_id
+            _setup_apple_calendar(config)
 
         save_config(config)
         print(f"\n[green]Configuration saved![/green]")
@@ -670,6 +646,138 @@ def setup():
                 set_api_key(prov, old_key)
         print("[yellow]Configuration restored.[/yellow]")
         raise typer.Exit(1)
+
+
+def _setup_google_calendar(config: dict[str, object]) -> None:
+    """Interactive Google Calendar API configuration."""
+    from src.config import get_google_credentials_path
+    headless = _is_headless_linux()
+
+    print(_google_calendar_setup_tutorial(headless=headless))
+
+    default_auth_mode = "device" if headless else config.get("google", {}).get("auth_mode", "desktop")
+    auth_mode = Prompt.ask(
+        "Google auth mode",
+        choices=["desktop", "device"],
+        default=default_auth_mode,
+    )
+    config.setdefault("google", {})["auth_mode"] = auth_mode
+
+    if auth_mode == "device":
+        print(
+            "[dim]Device mode needs a 'TVs and Limited Input devices' OAuth client. "
+            "A Desktop app client JSON will not work here.[/dim]"
+        )
+    else:
+        if headless:
+            print(
+                "[yellow]Desktop mode needs a browser on this machine. "
+                "If that is not available, switch to device mode and create a device client.[/yellow]"
+            )
+
+    current_path = get_google_credentials_path(config)
+    creds_input = Prompt.ask("Google credentials path or directory", default=str(current_path))
+    creds_input_path = Path(creds_input).expanduser()
+
+    if creds_input_path.exists() and creds_input_path.is_file():
+        creds_path = creds_input_path
+    elif creds_input_path.suffix.lower() == ".json":
+        creds_path = creds_input_path
+        creds_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        creds_input_path.mkdir(parents=True, exist_ok=True)
+        creds_path = creds_input_path / "google_credentials.json"
+
+    config.setdefault("google", {})["credentials_path"] = str(creds_path)
+
+    if not creds_path.exists():
+        print(f"\n[yellow]Place your OAuth credentials JSON at:[/yellow]")
+        print(f"  {creds_path}")
+    else:
+        print("[green]Google OAuth credentials found.[/green]")
+        if typer.confirm("Authenticate with Google now?", default=True):
+            from src.connections.google_calendar import authenticate
+            try:
+                authenticate(config)
+                print("[green]Google Calendar authenticated successfully![/green]")
+            except Exception as e:
+                print(f"[red]Authentication failed:[/red] {e}")
+                raise typer.Exit(1)
+
+    calendar_default = config["google"]["calendar_id"]
+    if _looks_like_google_calendar_id_mistake(calendar_default):
+        calendar_default = "primary"
+    while True:
+        calendar_id = Prompt.ask("Google Calendar ID", default=calendar_default)
+        if _looks_like_google_calendar_id_mistake(calendar_id):
+            print("[red]That looks like an OAuth client id or file path, not a Calendar ID.[/red]")
+            print("[dim]Use something like `primary` or your calendar's email-style ID.[/dim]")
+            calendar_default = "primary"
+            continue
+        config["google"]["calendar_id"] = calendar_id
+        break
+
+
+def _google_calendar_setup_tutorial(headless: bool) -> Panel:
+    """Build the Google Calendar setup guidance panel."""
+    auth_mode_note = (
+        "Device mode works on headless Linux."
+        if headless
+        else "Desktop mode uses a browser on the local machine."
+    )
+    text = (
+        "[bold]Google Calendar setup[/bold]\n"
+        "1. Enable the Google Calendar API and configure the OAuth consent screen.\n"
+        "2. Pick the right OAuth client type:\n"
+        "   - [bold]Desktop app[/bold] for a machine with a browser.\n"
+        "   - [bold]TVs and Limited Input devices[/bold] for a headless Linux server.\n"
+        "3. Set the OAuth consent screen user type correctly:\n"
+        "   - [bold]External[/bold] for personal Gmail accounts or users outside your Workspace.\n"
+        "   - [bold]Internal[/bold] only if every account belongs to the same Google Workspace or Cloud Identity organization.\n"
+        "   - If you see [bold]org_internal[/bold], the project is organization-restricted; switch the consent screen to External or use an account inside that organization.\n"
+        "4. If the app is in [bold]Testing[/bold] status, add your Google account to the [bold]Test users[/bold] list before authenticating.\n"
+        "   Otherwise Google may show [bold]Access blocked[/bold] / [bold]access_denied[/bold] even when the client looks correct.\n"
+        "   This is the common reason a personal Gmail account is rejected even after the device code step works.\n"
+        "5. Download the OAuth client JSON. ccal needs the JSON file, not just the client id.\n"
+        "6. For headless Linux, choose [bold]device[/bold] auth mode and use a device-client JSON.\n"
+        "   For a normal desktop machine, choose [bold]desktop[/bold] auth mode.\n"
+        "7. Enter either the JSON file path directly or the directory that contains it.\n"
+        "8. To find a shared calendar's ID, open Google Calendar on the web, open that calendar's [bold]Settings and sharing[/bold], then look under [bold]Integrate calendar[/bold].\n"
+        "   The main calendar can always use [bold]primary[/bold].\n"
+        "9. Enter a Calendar ID such as [bold]primary[/bold] or the Integrate calendar value; do not paste the OAuth client id or JSON path there.\n"
+        f"10. {auth_mode_note}\n"
+    )
+    return Panel(text, border_style="cyan", title="Google Calendar")
+
+
+def _setup_apple_calendar(config: dict[str, object]) -> None:
+    """Interactive Apple Calendar setup."""
+    from src.connections.apple_calendar import list_calendars as apple_list_calendars
+
+    try:
+        calendars = apple_list_calendars()
+        if calendars:
+            print(f"[dim]Available calendars: {', '.join(calendars)}[/dim]")
+        cal_name = Prompt.ask("Apple Calendar name", default=config.get("apple", {}).get("calendar_name", "Home"))
+        config.setdefault("apple", {})["calendar_name"] = cal_name
+    except Exception as e:
+        print(f"[yellow]Could not list calendars: {e}[/yellow]")
+        cal_name = Prompt.ask("Apple Calendar name", default="Home")
+        config.setdefault("apple", {})["calendar_name"] = cal_name
+
+
+def _looks_like_google_calendar_id_mistake(value: object) -> bool:
+    """Detect obvious misconfigured calendar IDs."""
+    if not isinstance(value, str):
+        return False
+    return value.endswith(".json") or ".apps.googleusercontent.com" in value or "/" in value
+
+
+def _is_headless_linux() -> bool:
+    """Detect a Linux environment without a GUI display."""
+    if platform.system() != "Linux":
+        return False
+    return not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
 
 
 @app.command(name="config")
@@ -704,8 +812,8 @@ def show_config():
 
     # Google Calendar API 状态
     from src.config import get_google_credentials_path, get_google_token_path
-    creds_path = get_google_credentials_path()
-    token_path = get_google_token_path()
+    creds_path = get_google_credentials_path(config)
+    token_path = get_google_token_path(config)
     if not creds_path.exists():
         gcal_status = "[red]credentials missing[/red]"
     elif not token_path.exists():

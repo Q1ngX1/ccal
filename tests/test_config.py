@@ -11,6 +11,7 @@ from src.config import (
     get_api_key,
     set_api_key,
     get_google_token_path,
+    get_google_credentials_dir,
     get_google_credentials_path,
     DEFAULT_CONFIG,
     CONFIG_DIR,
@@ -97,3 +98,16 @@ class TestGooglePaths:
         path = get_google_credentials_path()
         assert path.name == "google_credentials.json"
         assert str(path).endswith("ccal/google_credentials.json")
+
+    def test_google_credentials_path_uses_config_path(self, tmp_path):
+        config = {"google": {"credentials_path": str(tmp_path / "creds.json")}}
+        path = get_google_credentials_path(config)
+        assert path == tmp_path / "creds.json"
+
+    def test_google_credentials_path_uses_config_dir(self, tmp_path):
+        config = {"google": {"credentials_dir": str(tmp_path / "custom-google")}}
+        path = get_google_credentials_path(config)
+        assert path == tmp_path / "custom-google" / "google_credentials.json"
+
+    def test_google_credentials_dir_default(self):
+        assert get_google_credentials_dir() == CONFIG_DIR

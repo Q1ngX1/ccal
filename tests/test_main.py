@@ -672,6 +672,7 @@ class TestSetupCommand:
             ]),
             patch("src.main.get_api_key", return_value=None),
             patch("src.main.set_api_key") as mock_set_key,
+            patch("src.main.typer.confirm", return_value=False),
             patch("src.main.save_config") as mock_save,
         ):
             result = runner.invoke(app, ["setup"])
@@ -691,6 +692,7 @@ class TestSetupCommand:
                 "http://localhost:11434",       # api base
                 "ics",                          # output method
             ]),
+            patch("src.main.typer.confirm", return_value=False),
             patch("src.main.save_config") as mock_save,
         ):
             result = runner.invoke(app, ["setup"])
@@ -720,7 +722,7 @@ class TestSetupCommand:
             mock_set_key.assert_not_called()
 
     def test_setup_google_output(self, tmp_path):
-        creds_file = tmp_path / "creds.json"
+        creds_file = tmp_path / "google_credentials.json"
         # No credentials file exists
         with (
             patch("src.main.load_config", return_value={
@@ -732,15 +734,115 @@ class TestSetupCommand:
                 "openai",          # provider
                 "sk-key",          # api key
                 "google",          # output method
+                "desktop",         # auth mode
+                str(tmp_path),     # credentials directory
                 "primary",         # calendar id
             ]),
             patch("src.main.get_api_key", return_value=None),
             patch("src.main.set_api_key"),
+            patch("src.main.typer.confirm", side_effect=[True]),
             patch("src.main.save_config") as mock_save,
             patch("src.config.get_google_credentials_path", return_value=creds_file),
         ):
             result = runner.invoke(app, ["setup"])
             assert result.exit_code == 0
+            saved = mock_save.call_args[0][0]
+            assert saved["google"]["credentials_path"] == str(creds_file)
+
+    def test_setup_google_api_in_middle(self, tmp_path):
+        creds_file = tmp_path / "google_credentials.json"
+        with (
+            patch("src.main.load_config", return_value={
+                "llm": {"provider": "openai", "model": "openai/gpt-4o"},
+                "output": {"default": "ics"},
+                "google": {"calendar_id": "primary"},
+            }),
+            patch("src.main.Prompt.ask", side_effect=[
+                "openai",          # provider
+                "sk-key",          # api key
+                "ics",             # output method
+                "desktop",         # auth mode
+                str(tmp_path),     # credentials directory
+                "primary",         # calendar id
+            ]),
+            patch("src.main.get_api_key", return_value=None),
+            patch("src.main.set_api_key"),
+            patch("src.main.typer.confirm", side_effect=[True]),
+            patch("src.main.save_config") as mock_save,
+            patch("src.config.get_google_credentials_path", return_value=creds_file),
+        ):
+            result = runner.invoke(app, ["setup"])
+            assert result.exit_code == 0
+            saved = mock_save.call_args[0][0]
+            assert saved["output"]["default"] == "ics"
+            assert saved["google"]["calendar_id"] == "primary"
+            assert saved["google"]["credentials_path"] == str(creds_file)
+
+    def test_setup_google_accepts_file_path(self, tmp_path):
+        creds_file = tmp_path / "custom" / "creds.json"
+        creds_file.parent.mkdir(parents=True)
+        with (
+            patch("src.main.load_config", return_value={
+                "llm": {"provider": "openai", "model": "openai/gpt-4o"},
+                "output": {"default": "ics"},
+                "google": {"calendar_id": "primary"},
+            }),
+            patch("src.main.Prompt.ask", side_effect=[
+                "openai",
+                "sk-key",
+                "google",
+                "desktop",
+                str(creds_file),
+                "primary",
+            ]),
+            patch("src.main.get_api_key", return_value=None),
+            patch("src.main.set_api_key"),
+            patch("src.main.typer.confirm", side_effect=[True]),
+            patch("src.main.save_config") as mock_save,
+        ):
+            result = runner.invoke(app, ["setup"])
+            assert result.exit_code == 0
+            saved = mock_save.call_args[0][0]
+            assert saved["google"]["credentials_path"] == str(creds_file)
+
+    def test_setup_google_auth_failure_exits_before_calendar_id(self, tmp_path):
+        creds_file = tmp_path / "google_credentials.json"
+        creds_file.write_text('{"installed": {"client_id": "client-id"}}')
+        with (
+            patch("src.main.load_config", return_value={
+                "llm": {"provider": "openai", "model": "openai/gpt-4o"},
+                "output": {"default": "ics"},
+                "google": {"calendar_id": "primary", "credentials_path": str(creds_file), "auth_mode": "device"},
+            }),
+            patch("src.main.Prompt.ask", side_effect=[
+                "openai",
+                "sk-key",
+                "google",
+                "device",
+                str(creds_file),
+            ]),
+            patch("src.main.get_api_key", return_value=None),
+            patch("src.main.set_api_key"),
+            patch("src.main.typer.confirm", return_value=True),
+            patch("src.main.save_config") as mock_save,
+            patch("src.connections.google_calendar.authenticate", side_effect=RuntimeError("boom")),
+        ):
+            result = runner.invoke(app, ["setup"])
+            assert result.exit_code != 0
+            mock_save.assert_not_called()
+
+    def test_google_calendar_id_mistake_defaults_to_primary(self):
+        from src.main import _looks_like_google_calendar_id_mistake
+
+        assert _looks_like_google_calendar_id_mistake("844445506653-abc.apps.googleusercontent.com")
+        assert _looks_like_google_calendar_id_mistake("/tmp/creds.json")
+        assert not _looks_like_google_calendar_id_mistake("primary")
+
+    def test_headless_detection(self):
+        from src.main import _is_headless_linux
+
+        with patch("src.main.platform.system", return_value="Linux"), patch("src.main.os.environ", {}):
+            assert _is_headless_linux()
 
 
 # ── Additional CLI edge case tests ───────────────────────────────────

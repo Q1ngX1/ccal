@@ -33,7 +33,7 @@ ccal setup
 2. **自动设置默认模型** — 根据 provider 自动选择推荐模型（运行时可用 `-m` 覆盖）
 3. **输入 API Key** — 密码模式输入，存入系统密钥链（keyring），不允许空值；Ollama 无需 key，改为配置 API base URL
 4. **选择默认输出方式** — `ics` / `google`（macOS 额外可选 `apple`）
-5. **（按需）配置 Google Calendar** — 选择 `google` 输出时，提示放置 OAuth credentials 文件并选择 calendar ID
+5. **是否配置 Google Calendar API** — 这是一个独立的中间步骤；选 `Y` 会先给出简短教程，再让你输入凭据目录和 calendar ID
 6. **（按需）配置 Apple Calendar** — 选择 `apple` 输出时，列出可用日历并选择
 
 ### 支持的 LLM 提供商

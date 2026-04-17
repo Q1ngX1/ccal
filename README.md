@@ -120,7 +120,9 @@ ccal config
 
 Config is stored at `~/.config/ccal/config.toml`. API keys are stored in your system's native keyring (macOS Keychain / Linux Secret Service / Windows Credential Locker).
 
-For Google Calendar integration, place your OAuth client credentials JSON at `~/.config/ccal/google_credentials.json` (download from [Google Cloud Console](https://console.cloud.google.com/apis/credentials)).
+For Google Calendar integration, place your OAuth client credentials JSON in the directory configured during `ccal setup` (the file should be named `google_credentials.json`).
+
+You can also configure Google Calendar during `ccal setup` through the dedicated middle step, even if your default output is not Google.
 
 ## Project Structure
 

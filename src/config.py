@@ -20,6 +20,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     },
     "google": {
         "calendar_id": "primary",
+        "credentials_path": str(CONFIG_DIR / "google_credentials.json"),
+        "auth_mode": "desktop",
     },
 }
 
@@ -68,12 +70,33 @@ def set_api_key(provider: str, key: str) -> None:
     keyring.set_password(KEYRING_SERVICE, f"{provider}_api_key", key)
 
 
-def get_google_token_path() -> Path:
+def get_google_token_path(config: dict[str, Any] | None = None) -> Path:
     """Path for cached Google OAuth token."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     return CONFIG_DIR / "google_token.json"
 
 
-def get_google_credentials_path() -> Path:
-    """Path for Google OAuth client credentials."""
+def get_google_credentials_dir(config: dict[str, Any] | None = None) -> Path:
+    """Directory containing Google OAuth client credentials."""
+    if config:
+        google_config = config.get("google", {})
+        credentials_path = google_config.get("credentials_path")
+        if credentials_path:
+            return Path(credentials_path).expanduser().parent
+        credentials_dir = google_config.get("credentials_dir")
+        if credentials_dir:
+            return Path(credentials_dir).expanduser()
+    return CONFIG_DIR
+
+
+def get_google_credentials_path(config: dict[str, Any] | None = None) -> Path:
+    """Path for Google OAuth client credentials JSON."""
+    if config:
+        google_config = config.get("google", {})
+        credentials_path = google_config.get("credentials_path")
+        if credentials_path:
+            return Path(credentials_path).expanduser()
+        credentials_dir = google_config.get("credentials_dir")
+        if credentials_dir:
+            return Path(credentials_dir).expanduser() / "google_credentials.json"
     return CONFIG_DIR / "google_credentials.json"

@@ -120,7 +120,9 @@ ccal config
 
 配置文件存储在 `~/.config/ccal/config.toml`。API key 存储在系统原生密钥链中（macOS Keychain / Linux Secret Service / Windows Credential Locker）。
 
-使用 Google 日历功能需将 OAuth 客户端凭据 JSON 文件放置在 `~/.config/ccal/google_credentials.json`（从 [Google Cloud Console](https://console.cloud.google.com/apis/credentials) 下载）。
+使用 Google 日历功能时，请把 OAuth 客户端凭据 JSON 文件放到 `ccal setup` 中配置的目录里，文件名应为 `google_credentials.json`。
+
+你也可以在 `ccal setup` 的中间步骤里单独配置 Google 日历，即使默认输出方式不是 Google 也可以先把 API 配好。
 
 ## 项目结构
 
