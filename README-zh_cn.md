@@ -42,6 +42,7 @@ ccal setup
 - LLM 提供商和模型
 - API key（安全存储在系统密钥链中）
 - 默认输出方式（ICS 文件、Google 日历或 Apple 日历）
+- Google 日历配置，包括客户端类型、鉴权模式、凭据位置和 Calendar ID
 
 ### 2. 添加事件
 
@@ -120,7 +121,17 @@ ccal config
 
 配置文件存储在 `~/.config/ccal/config.toml`。API key 存储在系统原生密钥链中（macOS Keychain / Linux Secret Service / Windows Credential Locker）。
 
-使用 Google 日历功能时，请把 OAuth 客户端凭据 JSON 文件放到 `ccal setup` 中配置的目录里，文件名应为 `google_credentials.json`。
+使用 Google 日历功能时，`ccal` 会用到两类本地文件：
+
+- `google_credentials.json`：从 Google Cloud Console 下载的 OAuth 客户端凭据 JSON，里面包含 client id 和 client secret。这个文件建议一直保留。
+- `google_token.json`：首次授权后生成的登录 token 缓存。里面的 access token 会过期，但通常可以自动刷新，所以平时不用手动处理。
+
+在 `ccal setup` 里，你可以把凭据 JSON 放到配置的目录中，也可以直接把 JSON 文件路径输入给 setup。教程里还会说明：
+
+- `Desktop app` 和 `TVs and Limited Input devices` 怎么选
+- `External` 和 `Internal` 的区别
+- `Testing` 状态和 `Test users`
+- 怎么找到 Google Calendar ID
 
 你也可以在 `ccal setup` 的中间步骤里单独配置 Google 日历，即使默认输出方式不是 Google 也可以先把 API 配好。
 

@@ -745,7 +745,9 @@ def _google_calendar_setup_tutorial(headless: bool) -> Panel:
         "8. To find a shared calendar's ID, open Google Calendar on the web, open that calendar's [bold]Settings and sharing[/bold], then look under [bold]Integrate calendar[/bold].\n"
         "   The main calendar can always use [bold]primary[/bold].\n"
         "9. Enter a Calendar ID such as [bold]primary[/bold] or the Integrate calendar value; do not paste the OAuth client id or JSON path there.\n"
-        f"10. {auth_mode_note}\n"
+        "10. Keep the OAuth JSON file around after setup. It is the client credential, not the login token, and ccal may need it again if the token expires or is revoked.\n"
+        "    The login token is cached separately as `google_token.json` and can be regenerated.\n"
+        f"11. {auth_mode_note}\n"
     )
     return Panel(text, border_style="cyan", title="Google Calendar")
 

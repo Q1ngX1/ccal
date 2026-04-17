@@ -42,6 +42,7 @@ This will walk you through configuring:
 - LLM provider and model
 - API key (stored securely in system keyring)
 - Default output method (ICS file, Google Calendar, or Apple Calendar)
+- Google Calendar setup, including client type, auth mode, credentials location, and Calendar ID
 
 ### 2. Add an event
 
@@ -120,7 +121,17 @@ ccal config
 
 Config is stored at `~/.config/ccal/config.toml`. API keys are stored in your system's native keyring (macOS Keychain / Linux Secret Service / Windows Credential Locker).
 
-For Google Calendar integration, place your OAuth client credentials JSON in the directory configured during `ccal setup` (the file should be named `google_credentials.json`).
+For Google Calendar integration, ccal uses two different local files:
+
+- `google_credentials.json`: the OAuth client credentials JSON downloaded from Google Cloud Console. This contains the client id and client secret. Keep this file around after setup.
+- `google_token.json`: the cached login token created after the first successful authorization. The access token inside can expire and refresh automatically, so you usually do not need to touch it.
+
+During `ccal setup`, place the credentials JSON in the configured directory, or point setup directly at the JSON file. The setup tutorial also explains:
+
+- `Desktop app` vs `TVs and Limited Input devices`
+- `External` vs `Internal`
+- `Testing` status and `Test users`
+- how to find a Google Calendar ID
 
 You can also configure Google Calendar during `ccal setup` through the dedicated middle step, even if your default output is not Google.
 
