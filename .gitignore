@@ -16,6 +16,10 @@ wheels/
 .coverage.*
 htmlcov/
 
+# PyInstaller
+ccal.spec
+*.spec
+
 # IDE
 .vscode/
 .idea/
