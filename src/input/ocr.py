@@ -1,13 +1,28 @@
 from pathlib import Path
 
-import pytesseract
-from PIL import Image
-
 SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".tif"}
+
+_OCR_INSTALL_HINT = (
+    "OCR dependencies not installed. "
+    "Install them with: pip install ccal[ocr]"
+)
+
+
+def _check_ocr_deps() -> None:
+    """Raise ImportError if OCR dependencies are missing."""
+    try:
+        import pytesseract  # noqa: F401
+        from PIL import Image  # noqa: F401
+    except ImportError:
+        raise ImportError(_OCR_INSTALL_HINT)
 
 
 def extract_text(image_path: str, language: str | None = None) -> str:
     """Extract text from an image file using pytesseract OCR."""
+    _check_ocr_deps()
+    import pytesseract
+    from PIL import Image
+
     path = Path(image_path)
     if not path.exists():
         raise FileNotFoundError(f"Image file not found: {image_path}")

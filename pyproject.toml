@@ -10,11 +10,15 @@ dependencies = [
     "icalendar>=6.0",
     "keyring>=25.0",
     "litellm>=1.0",
-    "pillow>=11.0",
     "pydantic>=2.13.1",
-    "pytesseract>=0.3.13",
     "rich>=13.0",
     "typer>=0.24.1",
+]
+
+[project.optional-dependencies]
+ocr = [
+    "pillow>=11.0",
+    "pytesseract>=0.3.13",
 ]
 
 [project.scripts]

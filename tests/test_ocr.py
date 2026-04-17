@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from src.input.ocr import extract_text, is_image_file, SUPPORTED_EXTENSIONS
+from src.input.ocr import extract_text, is_image_file, SUPPORTED_EXTENSIONS, _check_ocr_deps
 
 
 class TestIsImageFile:
@@ -47,8 +47,8 @@ class TestExtractText:
 
         mock_image = MagicMock()
         with (
-            patch("src.input.ocr.Image.open", return_value=mock_image),
-            patch("src.input.ocr.pytesseract.image_to_string", return_value="  Meeting at 3pm  "),
+            patch("PIL.Image.open", return_value=mock_image),
+            patch("pytesseract.image_to_string", return_value="  Meeting at 3pm  "),
         ):
             result = extract_text(str(img))
         assert result == "Meeting at 3pm"
@@ -59,8 +59,8 @@ class TestExtractText:
 
         mock_image = MagicMock()
         with (
-            patch("src.input.ocr.Image.open", return_value=mock_image),
-            patch("src.input.ocr.pytesseract.image_to_string", return_value="会议") as mock_ocr,
+            patch("PIL.Image.open", return_value=mock_image),
+            patch("pytesseract.image_to_string", return_value="会议") as mock_ocr,
         ):
             result = extract_text(str(img), language="chi_sim")
             mock_ocr.assert_called_once_with(mock_image, lang="chi_sim")
@@ -69,3 +69,14 @@ class TestExtractText:
     def test_supported_extensions_complete(self):
         expected = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".tif"}
         assert SUPPORTED_EXTENSIONS == expected
+
+
+class TestOcrDepsCheck:
+    def test_missing_deps_raises_import_error(self):
+        with patch.dict("sys.modules", {"pytesseract": None}):
+            with pytest.raises(ImportError, match="pip install ccal\\[ocr\\]"):
+                _check_ocr_deps()
+
+    def test_deps_present_no_error(self):
+        # Should not raise when deps are installed
+        _check_ocr_deps()

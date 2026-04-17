@@ -14,13 +14,27 @@ class TestCalendarEventConstruction:
     def test_minimal(self):
         event = CalendarEvent(title="Test", start_time=datetime(2026, 1, 1, 9, 0))
         assert event.title == "Test"
-        assert event.end_time is None
+        assert event.end_time == datetime(2026, 1, 1, 10, 0)  # auto +1h
+        assert event.all_day is False
         assert event.location is None
         assert event.description is None
         assert event.reminder_minutes is None
         assert event.recurrence is None
         assert event.attendees == []
         assert event.timezone is None
+
+    def test_all_day_event(self):
+        event = CalendarEvent(title="Holiday", start_time=datetime(2026, 5, 1), all_day=True)
+        assert event.all_day is True
+        assert event.end_time == datetime(2026, 5, 2)  # auto +1 day
+
+    def test_auto_end_time_not_overwritten(self):
+        event = CalendarEvent(
+            title="Test",
+            start_time=datetime(2026, 1, 1, 9, 0),
+            end_time=datetime(2026, 1, 1, 12, 0),
+        )
+        assert event.end_time == datetime(2026, 1, 1, 12, 0)  # explicit, not overwritten
 
     def test_full(self, full_event):
         assert full_event.title == "Sprint Review"
@@ -96,8 +110,8 @@ class TestToIcal:
             cal = minimal_event.to_ical()
             ical_str = cal.to_ical().decode()
             assert "Quick Call" in ical_str
-            # No DTEND for minimal event
-            assert "DTEND" not in ical_str
+            # end_time auto-set to +1h
+            assert "DTEND" in ical_str
 
     def test_ical_invalid_timezone_fallback(self):
         """Invalid timezone should fall back to tz=None (naive datetime)."""

@@ -170,3 +170,64 @@ class TestParseEvent:
         ):
             with pytest.raises(Exception):
                 parse_event("test")
+
+    def test_multiple_events_parse(self, mock_config, mock_geo):
+        event_json = json.dumps([
+            {
+                "title": "Prep Night",
+                "start_time": "2026-04-20T18:00:00",
+                "end_time": None,
+                "location": "Andrew/Angela's home",
+                "description": None,
+                "reminder_minutes": None,
+                "recurrence": None,
+                "attendees": [],
+                "timezone": None,
+            },
+            {
+                "title": "Boba Chat",
+                "start_time": "2026-04-21T15:00:00",
+                "end_time": None,
+                "location": None,
+                "description": "Free boba or coffee",
+                "reminder_minutes": None,
+                "recurrence": None,
+                "attendees": [],
+                "timezone": None,
+            },
+        ])
+
+        with (
+            patch("src.models.llm.load_config", return_value=mock_config),
+            patch("src.models.llm.get_api_key", return_value="sk-test"),
+            patch("src.input.geo.get_geo_info", return_value=mock_geo),
+            patch("src.models.llm.litellm.completion", return_value=_make_llm_response(event_json)),
+        ):
+            events = parse_event("two announcements")
+
+        assert isinstance(events, list)
+        assert [event.title for event in events] == ["Prep Night", "Boba Chat"]
+
+    def test_missing_start_time_returns_editable_draft(self, mock_config, mock_geo):
+        event_json = json.dumps({
+            "title": "Needs Time",
+            "start_time": None,
+            "end_time": None,
+            "location": "Cafe",
+            "description": None,
+            "reminder_minutes": None,
+            "recurrence": None,
+            "attendees": [],
+            "timezone": None,
+        })
+
+        with (
+            patch("src.models.llm.load_config", return_value=mock_config),
+            patch("src.models.llm.get_api_key", return_value="sk-test"),
+            patch("src.input.geo.get_geo_info", return_value=mock_geo),
+            patch("src.models.llm.litellm.completion", return_value=_make_llm_response(event_json)),
+        ):
+            event = parse_event("event without time")
+
+        assert event.title == "Needs Time"
+        assert event.start_time is None

@@ -1,19 +1,57 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from icalendar import Calendar, Event, vRecur
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
-class CalendarEvent(BaseModel):
+class ParsedCalendarEvent(BaseModel):
     title: str = Field(description="Event title")
-    start_time: datetime = Field(description="Event start time")
+    start_time: datetime | None = Field(default=None, description="Event start time")
     end_time: datetime | None = Field(default=None, description="Event end time")
+    all_day: bool = Field(default=False, description="Whether this is an all-day event")
     location: str | None = Field(default=None, description="Event location")
     description: str | None = Field(default=None, description="Event description")
     reminder_minutes: int | None = Field(default=None, description="Reminder in minutes before event")
     recurrence: str | None = Field(default=None, description="Recurrence rule in RRULE format")
     attendees: list[str] = Field(default_factory=list, description="List of attendee email addresses")
     timezone: str | None = Field(default=None, description="IANA timezone, e.g. Asia/Shanghai")
+
+    def get_timezone(self) -> str:
+        """Resolve timezone: explicit > geo-detected > UTC fallback."""
+        if self.timezone:
+            return self.timezone
+        from src.input.geo import get_geo_info
+        geo = get_geo_info()
+        return geo.timezone or "UTC"
+
+    def to_calendar_event(self) -> "CalendarEvent":
+        """Convert to a complete CalendarEvent, requiring a start time."""
+        if self.start_time is None:
+            raise ValueError("start_time is required before output")
+        return CalendarEvent(**self.model_dump())
+
+
+class CalendarEvent(BaseModel):
+    title: str = Field(description="Event title")
+    start_time: datetime = Field(description="Event start time")
+    end_time: datetime | None = Field(default=None, description="Event end time")
+    all_day: bool = Field(default=False, description="Whether this is an all-day event")
+    location: str | None = Field(default=None, description="Event location")
+    description: str | None = Field(default=None, description="Event description")
+    reminder_minutes: int | None = Field(default=None, description="Reminder in minutes before event")
+    recurrence: str | None = Field(default=None, description="Recurrence rule in RRULE format")
+    attendees: list[str] = Field(default_factory=list, description="List of attendee email addresses")
+    timezone: str | None = Field(default=None, description="IANA timezone, e.g. Asia/Shanghai")
+
+    @model_validator(mode="after")
+    def _auto_end_time(self) -> "CalendarEvent":
+        """Auto-set end_time: +1 day for all-day events, +1 hour otherwise."""
+        if self.end_time is None:
+            if self.all_day:
+                self.end_time = self.start_time + timedelta(days=1)
+            else:
+                self.end_time = self.start_time + timedelta(hours=1)
+        return self
 
     def get_timezone(self) -> str:
         """Resolve timezone: explicit > geo-detected > UTC fallback."""
@@ -38,11 +76,14 @@ class CalendarEvent(BaseModel):
             tz = None
 
         event.add("summary", self.title)
-        if tz:
-            event.add("dtstart", self.start_time.replace(tzinfo=tz))
+        if self.all_day:
+            event.add("dtstart", self.start_time.date())
+            event.add("dtend", self.end_time.date())
         else:
-            event.add("dtstart", self.start_time)
-        if self.end_time:
+            if tz:
+                event.add("dtstart", self.start_time.replace(tzinfo=tz))
+            else:
+                event.add("dtstart", self.start_time)
             if tz:
                 event.add("dtend", self.end_time.replace(tzinfo=tz))
             else:
@@ -75,25 +116,23 @@ class CalendarEvent(BaseModel):
     def to_google_event(self) -> dict:
         """Convert to Google Calendar API event format."""
         tz_name = self.get_timezone()
-        event: dict = {
-            "summary": self.title,
-            "start": {
-                "dateTime": self.start_time.isoformat(),
-                "timeZone": tz_name,
-            },
-        }
-        if self.end_time:
-            event["end"] = {
-                "dateTime": self.end_time.isoformat(),
-                "timeZone": tz_name,
+        if self.all_day:
+            event: dict = {
+                "summary": self.title,
+                "start": {"date": self.start_time.strftime("%Y-%m-%d")},
+                "end": {"date": self.end_time.strftime("%Y-%m-%d")},
             }
         else:
-            from datetime import timedelta
-
-            end = self.start_time + timedelta(hours=1)
-            event["end"] = {
-                "dateTime": end.isoformat(),
-                "timeZone": tz_name,
+            event: dict = {
+                "summary": self.title,
+                "start": {
+                    "dateTime": self.start_time.isoformat(),
+                    "timeZone": tz_name,
+                },
+                "end": {
+                    "dateTime": self.end_time.isoformat(),
+                    "timeZone": tz_name,
+                },
             }
         if self.location:
             event["location"] = self.location
@@ -109,3 +148,6 @@ class CalendarEvent(BaseModel):
         if self.attendees:
             event["attendees"] = [{"email": email} for email in self.attendees]
         return event
+
+
+EventLike = CalendarEvent | ParsedCalendarEvent

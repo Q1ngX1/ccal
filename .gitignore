@@ -29,3 +29,6 @@ Thumbs.db
 
 # Generated ICS files
 *.ics
+
+# local image test folder
+.imgs/
