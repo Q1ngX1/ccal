@@ -124,7 +124,7 @@ ccal config
 使用 Google 日历功能时，`ccal` 会用到两类本地文件：
 
 - `google_credentials.json`：从 Google Cloud Console 下载的 OAuth 客户端凭据 JSON，里面包含 client id 和 client secret。这个文件建议一直保留。
-- `google_token.json`：首次授权后生成的登录 token 缓存。里面的 access token 会过期，但通常可以自动刷新，所以平时不用手动处理。
+- `google_token_*.json`：首次授权后生成的登录 token 缓存。里面的 access token 会过期，但通常可以自动刷新，所以平时不用手动处理。ccal 会根据当前凭据路径和 auth mode 选择对应的缓存文件。
 
 在 `ccal setup` 里，你可以把凭据 JSON 放到配置的目录中，也可以直接把 JSON 文件路径输入给 setup。教程里还会说明：
 
@@ -132,6 +132,7 @@ ccal config
 - `External` 和 `Internal` 的区别
 - `Testing` 状态和 `Test users`
 - 怎么找到 Google Calendar ID
+- setup 阶段会验证所选 Calendar ID 是否可访问
 
 你也可以在 `ccal setup` 的中间步骤里单独配置 Google 日历，即使默认输出方式不是 Google 也可以先把 API 配好。
 

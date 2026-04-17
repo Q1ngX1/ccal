@@ -217,7 +217,7 @@ ccal config
 通过 OAuth 2.0 认证同步事件。`ccal` 需要两类文件：
 
 - `google_credentials.json`：OAuth 客户端凭据，包含 client id / client secret。这个文件建议一直保留。
-- `google_token.json`：首次授权后生成的登录 token 缓存，access token 会过期，但通常会自动刷新。
+- `google_token_*.json`：首次授权后生成的登录 token 缓存，access token 会过期，但通常会自动刷新。ccal 会按当前凭据和 auth mode 选择对应的缓存文件。
 
 首次使用时请按下面流程配置：
 
@@ -229,8 +229,7 @@ ccal config
 4. 如果项目是 `Testing` 状态，把你的 Google 账号加入 `Test users`
 5. 下载 OAuth JSON，放到 `ccal setup` 配置的目录里，文件名应为 `google_credentials.json`
 6. 首次运行时完成授权，后续会自动使用本地 token 缓存
-
-Calendar ID 可以在 Google Calendar 网页版某个日历的 `Settings and sharing` -> `Integrate calendar` 里找到；主日历可直接填 `primary`。
+Calendar ID 会在 setup 里做一次可访问性校验。它可以在 Google Calendar 网页版某个日历的 `Settings and sharing` -> `Integrate calendar` 里找到；主日历可直接填 `primary`。
 
 ### Apple Calendar（仅 macOS）
 

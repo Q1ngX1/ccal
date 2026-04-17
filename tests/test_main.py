@@ -19,6 +19,7 @@ from src.main import (
     read_stdin,
     _resolve_input,
     _parse_with_retry,
+    _validate_google_calendar_id,
 )
 from src.models.model import CalendarEvent, ParsedCalendarEvent
 
@@ -830,6 +831,38 @@ class TestSetupCommand:
             result = runner.invoke(app, ["setup"])
             assert result.exit_code != 0
             mock_save.assert_not_called()
+
+    def test_setup_google_reprompts_invalid_calendar_id(self, tmp_path):
+        creds_file = tmp_path / "google_credentials.json"
+        creds_file.write_text('{"installed": {"client_id": "client-id"}}')
+        mock_service = MagicMock()
+        with (
+            patch("src.main.load_config", return_value={
+                "llm": {"provider": "openai", "model": "openai/gpt-4o"},
+                "output": {"default": "ics"},
+                "google": {"calendar_id": "primary", "credentials_path": str(creds_file), "auth_mode": "desktop"},
+            }),
+            patch("src.main.Prompt.ask", side_effect=[
+                "openai",
+                "sk-key",
+                "google",
+                "desktop",
+                str(creds_file),
+                "bad-calendar-id",
+                "primary",
+            ]),
+            patch("src.main.get_api_key", return_value=None),
+            patch("src.main.set_api_key"),
+            patch("src.main.typer.confirm", side_effect=[True, True]),
+            patch("src.main.save_config") as mock_save,
+            patch("src.connections.google_calendar.authenticate", return_value=mock_service),
+            patch("src.main._validate_google_calendar_id", side_effect=[False, True]) as mock_validate,
+        ):
+            result = runner.invoke(app, ["setup"])
+            assert result.exit_code == 0
+            assert mock_validate.call_count == 2
+            saved = mock_save.call_args[0][0]
+            assert saved["google"]["calendar_id"] == "primary"
 
     def test_google_calendar_id_mistake_defaults_to_primary(self):
         from src.main import _looks_like_google_calendar_id_mistake

@@ -91,7 +91,8 @@ class TestGooglePaths:
         fake_dir = tmp_path / "ccal"
         with patch("src.config.CONFIG_DIR", fake_dir):
             path = get_google_token_path()
-        assert path == fake_dir / "google_token.json"
+        assert path.parent == fake_dir
+        assert path.name.startswith("google_token_")
         assert fake_dir.exists()  # should create dir
 
     def test_google_credentials_path(self):

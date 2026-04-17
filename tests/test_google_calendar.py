@@ -7,6 +7,7 @@ from unittest.mock import patch, MagicMock, PropertyMock
 import pytest
 
 from src.connections.google_calendar import authenticate, create_event, list_calendars
+from src.config import get_google_token_path
 
 
 def _mock_urlopen(payload: dict):
@@ -18,11 +19,23 @@ def _mock_urlopen(payload: dict):
 
 
 class TestAuthenticate:
+    def test_token_path_changes_with_credentials_and_mode(self, tmp_path):
+        creds_a = tmp_path / "a" / "google_credentials.json"
+        creds_b = tmp_path / "b" / "google_credentials.json"
+        path_a = get_google_token_path({"google": {"credentials_path": str(creds_a), "auth_mode": "desktop"}})
+        path_b = get_google_token_path({"google": {"credentials_path": str(creds_b), "auth_mode": "desktop"}})
+        path_c = get_google_token_path({"google": {"credentials_path": str(creds_a), "auth_mode": "device"}})
+
+        assert path_a != path_b
+        assert path_a != path_c
+        assert path_a.name.startswith("google_token_")
+
     def test_uses_configured_credentials_dir(self, tmp_path):
         creds_dir = tmp_path / "google-creds"
-        token_file = creds_dir / "google_token.json"
+        token_file = get_google_token_path({"google": {"credentials_path": str(creds_dir / "google_credentials.json"), "auth_mode": "desktop"}})
         creds_file = creds_dir / "google_credentials.json"
-        token_file.parent.mkdir(parents=True)
+        creds_file.parent.mkdir(parents=True, exist_ok=True)
+        token_file.parent.mkdir(parents=True, exist_ok=True)
         token_file.write_text('{"token": "ok"}')
         creds_file.write_text('{"installed": {}}')
 

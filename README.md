@@ -124,7 +124,7 @@ Config is stored at `~/.config/ccal/config.toml`. API keys are stored in your sy
 For Google Calendar integration, ccal uses two different local files:
 
 - `google_credentials.json`: the OAuth client credentials JSON downloaded from Google Cloud Console. This contains the client id and client secret. Keep this file around after setup.
-- `google_token.json`: the cached login token created after the first successful authorization. The access token inside can expire and refresh automatically, so you usually do not need to touch it.
+- `google_token_*.json`: the cached login token created after the first successful authorization. The access token inside can expire and refresh automatically, so you usually do not need to touch it. ccal picks the cache file based on the current credentials path and auth mode.
 
 During `ccal setup`, place the credentials JSON in the configured directory, or point setup directly at the JSON file. The setup tutorial also explains:
 
@@ -132,6 +132,7 @@ During `ccal setup`, place the credentials JSON in the configured directory, or 
 - `External` vs `Internal`
 - `Testing` status and `Test users`
 - how to find a Google Calendar ID
+- setup-time validation of the selected Calendar ID
 
 You can also configure Google Calendar during `ccal setup` through the dedicated middle step, even if your default output is not Google.
 

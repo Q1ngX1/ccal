@@ -1,3 +1,4 @@
+import hashlib
 import os
 import tomllib
 from pathlib import Path
@@ -73,7 +74,8 @@ def set_api_key(provider: str, key: str) -> None:
 def get_google_token_path(config: dict[str, Any] | None = None) -> Path:
     """Path for cached Google OAuth token."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    return CONFIG_DIR / "google_token.json"
+    cache_key = _google_token_cache_key(config)
+    return CONFIG_DIR / f"google_token_{cache_key}.json"
 
 
 def get_google_credentials_dir(config: dict[str, Any] | None = None) -> Path:
@@ -100,3 +102,14 @@ def get_google_credentials_path(config: dict[str, Any] | None = None) -> Path:
         if credentials_dir:
             return Path(credentials_dir).expanduser() / "google_credentials.json"
     return CONFIG_DIR / "google_credentials.json"
+
+
+def _google_token_cache_key(config: dict[str, Any] | None = None) -> str:
+    """Derive a stable cache key from the selected Google credentials and auth mode."""
+    credentials_path = get_google_credentials_path(config)
+    auth_mode = "desktop"
+    if config:
+        auth_mode = config.get("google", {}).get("auth_mode", auth_mode)
+    canonical_path = str(credentials_path.expanduser().resolve(strict=False))
+    raw_key = f"{canonical_path}|{auth_mode}"
+    return hashlib.sha256(raw_key.encode("utf-8")).hexdigest()[:16]
