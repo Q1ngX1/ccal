@@ -11,26 +11,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from src.config import get_api_key, load_config, save_config, set_api_key
-from src.event_workflow import (
-    IncompleteEventError,
-    ask_event_index,
-    confirm_and_output as confirm_and_output_impl,
-    confirm_and_output_many as confirm_and_output_many_impl,
-    display_event as display_event_impl,
-    display_events as display_events_impl,
-    edit_event as edit_event_impl,
-    output_event as output_event_impl,
-    output_events as output_events_impl,
-)
-from src.google_setup import (
-    google_calendar_setup_tutorial,
-    is_headless_linux,
-    looks_like_google_calendar_id_mistake,
-    setup_google_calendar,
-    validate_google_calendar_id,
-)
 from src.input.ocr import is_image_file
-from src.models.llm import parse_event
 from src.models.model import CalendarEvent, EventLike, ParsedCalendarEvent
 
 
@@ -70,26 +51,38 @@ def main_callback(
 
 
 def display_event(event: EventLike, as_json: bool = False) -> None:
+    from src.event_workflow import display_event as display_event_impl
+
     return display_event_impl(event, as_json=as_json)
 
 
 def display_events(events: EventLike | list[EventLike], as_json: bool = False) -> None:
+    from src.event_workflow import display_events as display_events_impl
+
     return display_events_impl(events, as_json=as_json)
 
 
 def output_event(event: EventLike, output: str | None) -> None:
+    from src.event_workflow import output_event as output_event_impl
+
     return output_event_impl(event, output, load_config_fn=load_config)
 
 
 def output_events(events: EventLike | list[EventLike], output: str | None) -> bool:
+    from src.event_workflow import output_events as output_events_impl
+
     return output_events_impl(events, output, load_config_fn=load_config, output_event_fn=output_event)
 
 
 def edit_event(event: EventLike) -> EventLike:
+    from src.event_workflow import edit_event as edit_event_impl
+
     return edit_event_impl(event)
 
 
 def confirm_and_output(event: EventLike | list[EventLike], output: str | None, yes: bool = False) -> None:
+    from src.event_workflow import confirm_and_output as confirm_and_output_impl
+
     return confirm_and_output_impl(
         event,
         output,
@@ -103,6 +96,8 @@ def confirm_and_output(event: EventLike | list[EventLike], output: str | None, y
 
 
 def confirm_and_output_many(events: list[EventLike], output: str | None, yes: bool = False) -> None:
+    from src.event_workflow import confirm_and_output_many as confirm_and_output_many_impl
+
     return confirm_and_output_many_impl(
         events,
         output,
@@ -114,23 +109,39 @@ def confirm_and_output_many(events: list[EventLike], output: str | None, yes: bo
 
 
 def _setup_google_calendar(config: dict[str, object]) -> None:
+    from src.google_setup import setup_google_calendar
+
     return setup_google_calendar(config, validate_calendar_id_fn=_validate_google_calendar_id)
 
 
 def _validate_google_calendar_id(service, calendar_id: str) -> bool:
+    from src.google_setup import validate_google_calendar_id
+
     return validate_google_calendar_id(service, calendar_id)
 
 
 def _google_calendar_setup_tutorial(headless: bool):
+    from src.google_setup import google_calendar_setup_tutorial
+
     return google_calendar_setup_tutorial(headless)
 
 
 def _looks_like_google_calendar_id_mistake(value: object) -> bool:
+    from src.google_setup import looks_like_google_calendar_id_mistake
+
     return looks_like_google_calendar_id_mistake(value)
 
 
 def _is_headless_linux() -> bool:
+    from src.google_setup import is_headless_linux
+
     return is_headless_linux()
+
+
+def parse_event(text: str, provider: str | None = None, model: str | None = None) -> EventLike | list[EventLike]:
+    from src.models.llm import parse_event as parse_event_impl
+
+    return parse_event_impl(text, provider=provider, model=model)
 
 
 def read_stdin() -> str | None:
