@@ -51,6 +51,12 @@ If you already have Tesseract installed on Windows and want `ccal` to use it, pa
 powershell -ExecutionPolicy Bypass -File .\install.ps1 -TesseractHome "C:\Program Files\Tesseract-OCR"
 ```
 
+Once installed, you can pull the latest standalone release with:
+
+```bash
+ccal update
+```
+
 ### From source
 
 If you want to develop locally or run from source:
@@ -153,6 +159,7 @@ ccal config
 |---------|-------------|
 | `ccal add [text\|image]` | Parse input and create a calendar event |
 | `ccal parse [text\|image]` | Parse and display event fields without saving |
+| `ccal update` | Download and install the latest standalone release |
 | `ccal setup` | Interactive configuration wizard |
 | `ccal config` | Show current configuration and platform info |
 

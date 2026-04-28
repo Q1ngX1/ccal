@@ -144,6 +144,12 @@ def parse_event(text: str, provider: str | None = None, model: str | None = None
     return parse_event_impl(text, provider=provider, model=model)
 
 
+def update_latest() -> str:
+    from src.update import update_latest as update_latest_impl
+
+    return update_latest_impl()
+
+
 def read_stdin() -> str | None:
     """Read text from stdin if piped."""
     if not sys.stdin.isatty():
@@ -232,6 +238,17 @@ def parse(
     event = _parse_with_retry(text, provider=provider, model=model)
 
     display_events(event, as_json=output_json)
+
+
+@app.command()
+def update():
+    """Update ccal to the latest standalone release."""
+    try:
+        message = update_latest()
+    except Exception as exc:
+        print(f"[red]{exc}[/red]")
+        raise typer.Exit(1)
+    print(f"[green]{message}[/green]")
 
 
 @app.command()

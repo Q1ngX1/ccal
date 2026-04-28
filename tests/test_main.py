@@ -220,6 +220,14 @@ class TestVersionFlag:
             assert "0.1.0" in result.output
 
 
+class TestUpdateCommand:
+    def test_update_command(self):
+        with patch("src.main.update_latest", return_value="Updated ccal to 0.1.10."):
+            result = runner.invoke(app, ["update"])
+            assert result.exit_code == 0
+            assert "Updated ccal to 0.1.10." in result.output
+
+
 # ── output_event tests ───────────────────────────────────────────────
 
 class TestOutputEvent:

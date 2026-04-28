@@ -203,6 +203,20 @@ The output includes:
 
 ---
 
+## `ccal update`
+
+Download and install the latest standalone release for the current platform.
+
+```bash
+ccal update
+```
+
+`ccal update` is intended for standalone binaries produced by the release workflow or the installer. It downloads the latest GitHub Release asset for your platform and replaces the current binary.
+
+If you are running from source, reinstall with your package manager or development workflow instead.
+
+---
+
 ## Output Targets
 
 ### ICS File
