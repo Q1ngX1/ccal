@@ -21,6 +21,7 @@ from src.main import (
     _parse_with_retry,
     _validate_google_calendar_id,
 )
+from src.event_workflow import _resolve_editor_command
 from src.models.model import CalendarEvent, ParsedCalendarEvent
 
 runner = CliRunner()
@@ -633,6 +634,21 @@ class TestEditEvent:
         with patch("subprocess.run", side_effect=self._mock_editor(edited)):
             result = edit_event(self._event())
             assert result.title == "Original"
+
+    def test_resolve_editor_prefers_env(self, monkeypatch):
+        monkeypatch.setenv("EDITOR", "custom-editor --wait")
+        monkeypatch.delenv("VISUAL", raising=False)
+        with patch("src.event_workflow.which", return_value="/usr/bin/custom-editor"):
+            assert _resolve_editor_command() == ["custom-editor", "--wait"]
+
+    def test_resolve_editor_windows_fallback(self, monkeypatch):
+        monkeypatch.delenv("VISUAL", raising=False)
+        monkeypatch.delenv("EDITOR", raising=False)
+        with (
+            patch("src.event_workflow.os.name", "nt"),
+            patch("src.event_workflow.which", return_value=None),
+        ):
+            assert _resolve_editor_command() == ["notepad.exe"]
 
 
 # ── read_stdin tests ─────────────────────────────────────────────────

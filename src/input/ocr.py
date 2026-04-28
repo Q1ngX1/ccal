@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from src.input.tesseract_runtime import configure_tesseract_runtime
+
 SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".tif"}
 
 _OCR_INSTALL_HINT = (
@@ -19,6 +21,7 @@ def _check_ocr_deps() -> None:
 
 def extract_text(image_path: str, language: str | None = None) -> str:
     """Extract text from an image file using pytesseract OCR."""
+    configure_tesseract_runtime()
     _check_ocr_deps()
     import pytesseract
     from PIL import Image
@@ -31,8 +34,13 @@ def extract_text(image_path: str, language: str | None = None) -> str:
             f"Unsupported image format '{path.suffix}'. "
             f"Supported: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
         )
-    img = Image.open(path)
-    text = pytesseract.image_to_string(img, lang=language) if language else pytesseract.image_to_string(img)
+    try:
+        img = Image.open(path)
+        text = pytesseract.image_to_string(img, lang=language) if language else pytesseract.image_to_string(img)
+    except pytesseract.TesseractNotFoundError as exc:
+        raise RuntimeError(
+            "Tesseract executable not found. Install Tesseract or set CCAL_TESSERACT_HOME/CCAL_TESSERACT_CMD."
+        ) from exc
     return text.strip()
 
 

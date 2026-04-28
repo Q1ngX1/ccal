@@ -30,6 +30,10 @@ cd ccal
 uv sync
 ```
 
+## Standalone Builds
+
+See the build guide in [`docs/building.en.md`](docs/building.en.md) for PyInstaller packaging, including bundled OCR/Tesseract support.
+
 ## Quick Start
 
 ### 1. Setup

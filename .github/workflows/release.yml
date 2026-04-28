@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset_name: windows-x64
+            build_args: ""
+            setup_tesseract: true
+          - os: ubuntu-latest
+            asset_name: linux-x64
+            build_args: "--no-ocr"
+            setup_tesseract: false
+          - os: macos-latest
+            asset_name: macos-arm64
+            build_args: "--no-ocr"
+            setup_tesseract: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --locked --extra ocr
+
+      - name: Install Tesseract on Windows
+        if: matrix.setup_tesseract
+        shell: pwsh
+        run: choco install tesseract -y --no-progress
+
+      - name: Build release binary
+        shell: pwsh
+        run: |
+          $args = @("run", "python", "scripts/build_release.py", "--name", "ccal-${{ matrix.asset_name }}")
+          if ("${{ matrix.build_args }}") {
+            $args += "${{ matrix.build_args }}"
+          }
+          uv @args
+
+      - name: Prepare asset name
+        shell: pwsh
+        run: |
+          $source = if ("${{ runner.os }}" -eq "Windows") { "dist/ccal-${{ matrix.asset_name }}.exe" } else { "dist/ccal-${{ matrix.asset_name }}" }
+          if (!(Test-Path $source)) {
+            throw "Expected build output not found: $source"
+          }
+          New-Item -ItemType Directory -Force -Path release-assets | Out-Null
+          Copy-Item $source "release-assets/$(Split-Path $source -Leaf)"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccal-${{ matrix.asset_name }}
+          path: release-assets/*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true

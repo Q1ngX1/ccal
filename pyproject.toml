@@ -26,6 +26,7 @@ ccal = "src.main:main"
 
 [dependency-groups]
 dev = [
+    "pyinstaller>=6.20.0",
     "pytest>=8.0",
     "pytest-cov>=6.0",
 ]
