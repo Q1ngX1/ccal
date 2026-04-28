@@ -24,15 +24,9 @@ A CLI tool that turns natural language text or images into calendar events. Powe
 
 ## Installation
 
-```bash
-git clone https://github.com/your-username/ccal.git
-cd ccal
-uv sync
-```
-
 ### Official installer
 
-For Linux and macOS, you can install the latest release with:
+The easiest way to install `ccal` on Linux or macOS is with the official installer:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh
@@ -43,6 +37,18 @@ To pin a version or choose a custom destination, pass arguments after `sh -s --`
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.10
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --prefix "$HOME/bin"
+```
+
+Windows users can download the matching `.exe` asset from the GitHub Releases page.
+
+### From source
+
+If you want to develop locally or run from source:
+
+```bash
+git clone https://github.com/your-username/ccal.git
+cd ccal
+uv sync
 ```
 
 ### Prebuilt binaries
