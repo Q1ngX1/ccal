@@ -1,10 +1,12 @@
 import json as json_lib
 import os
 import re
+import shlex
 import subprocess
 import tempfile
 from datetime import datetime
 from typing import Callable
+from shutil import which
 
 import typer
 from rich import print
@@ -303,14 +305,14 @@ def edit_event(event: EventLike) -> EventLike:
     ]
     text = "\n".join(lines) + "\n"
 
-    editor = os.environ.get("VISUAL") or os.environ.get("EDITOR", "vi")
+    editor = _resolve_editor_command()
 
     with tempfile.NamedTemporaryFile(suffix=".yaml", mode="w", delete=False) as f:
         f.write(text)
         tmp_path = f.name
 
     try:
-        result = subprocess.run([editor, tmp_path])
+        result = subprocess.run([*editor, tmp_path])
         if result.returncode != 0:
             print("[red]Editor exited with an error. Keeping original event.[/red]")
             return event
@@ -412,6 +414,29 @@ def edit_event(event: EventLike) -> EventLike:
     if merged.get("start_time"):
         return CalendarEvent(**merged)
     return ParsedCalendarEvent(**merged)
+
+
+def _resolve_editor_command() -> list[str]:
+    """Pick a usable editor command, preferring user configuration."""
+    system = os.name
+    candidates = [os.environ.get("VISUAL"), os.environ.get("EDITOR")]
+    if system == "nt":
+        candidates.extend(["notepad.exe", "notepad"])
+    elif system == "posix":
+        candidates.extend(["nano", "vi", "vim"])
+    else:
+        candidates.append("vi")
+
+    for candidate in candidates:
+        if not candidate:
+            continue
+        parts = shlex.split(candidate, posix=(system != "nt"))
+        if not parts:
+            continue
+        if which(parts[0]) or os.path.isabs(parts[0]):
+            return parts
+
+    return ["notepad.exe"] if system == "nt" else ["vi"]
 
 
 def format_datetime_for_edit(value: datetime | None, all_day: bool) -> str:
