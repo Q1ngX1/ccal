@@ -58,6 +58,15 @@ class TestSaveConfig:
         assert loaded["llm"]["provider"] == "anthropic"
         assert loaded["output"]["default"] == "google"
 
+    def test_escapes_windows_paths(self, tmp_path):
+        fake_dir = tmp_path / "ccal"
+        fake_file = fake_dir / "config.toml"
+        config = {"google": {"credentials_path": r"C:\Users\zansh\.config\ccal\google_credentials.json"}}
+        with patch("src.config.CONFIG_DIR", fake_dir), patch("src.config.CONFIG_FILE", fake_file):
+            save_config(config)
+            content = fake_file.read_text()
+        assert r'C:\\Users\\zansh\\.config\\ccal\\google_credentials.json' in content
+
     def test_handles_bool_and_int(self, tmp_path):
         fake_dir = tmp_path / "ccal"
         fake_file = fake_dir / "config.toml"
@@ -98,7 +107,8 @@ class TestGooglePaths:
     def test_google_credentials_path(self):
         path = get_google_credentials_path()
         assert path.name == "google_credentials.json"
-        assert str(path).endswith("ccal/google_credentials.json")
+        assert "ccal" in str(path)
+        assert str(path).endswith("google_credentials.json")
 
     def test_google_credentials_path_uses_config_path(self, tmp_path):
         config = {"google": {"credentials_path": str(tmp_path / "creds.json")}}

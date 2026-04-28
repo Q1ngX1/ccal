@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import tomllib
 from pathlib import Path
@@ -52,7 +53,7 @@ def save_config(config: dict[str, Any]) -> None:
             lines.append(f"[{section}]")
             for key, val in values.items():
                 if isinstance(val, str):
-                    lines.append(f'{key} = "{val}"')
+                    lines.append(f"{key} = {json.dumps(val)}")
                 elif isinstance(val, bool):
                     lines.append(f"{key} = {'true' if val else 'false'}")
                 elif isinstance(val, int | float):
