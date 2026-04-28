@@ -30,6 +30,21 @@ cd ccal
 uv sync
 ```
 
+### Official installer
+
+For Linux and macOS, you can install the latest release with:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh
+```
+
+To pin a version or choose a custom destination, pass arguments after `sh -s --`, for example:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.10
+curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --prefix "$HOME/bin"
+```
+
 ### Prebuilt binaries
 
 If you want a ready-to-run command-line executable, download the asset for your platform from the GitHub Releases page. The release binaries are built for Linux, macOS, and Windows, and they include the core CLI without the optional OCR extra.
