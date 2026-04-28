@@ -96,6 +96,9 @@ normalize_os() {
   case "$os_name" in
     Linux*) printf '%s' "linux" ;;
     Darwin*) printf '%s' "macos" ;;
+    MINGW*|MSYS*|CYGWIN*)
+      die "install.sh supports Linux and macOS only (detected: ${os_name}); on Windows download the .exe release asset instead"
+      ;;
     *) die "install.sh supports Linux and macOS only (detected: ${os_name})" ;;
   esac
 }
@@ -274,7 +277,7 @@ entries="$(asset_entries "$json")"
 
 release_tag="$tag"
 if [ "$tag" = "latest" ]; then
-  release_tag="$(printf '%s' "$json" | tr -d '\n' | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p')"
+  release_tag="$(printf '%s' "$json" | tr -d '\n' | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
   [ -n "$release_tag" ] || die "could not determine latest release tag"
 fi
 
