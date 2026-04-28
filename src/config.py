@@ -56,11 +56,7 @@ def save_config(config: dict[str, Any]) -> None:
             lines.append(f"[{section}]")
             for key, val in values.items():
                 if isinstance(val, str):
-<<<<<<< HEAD
                     lines.append(f"{key} = {json.dumps(val, ensure_ascii=False)}")
-=======
-                    lines.append(f"{key} = {json.dumps(val)}")
->>>>>>> 3481fc6 (Optimize CLI startup and fix TOML escaping)
                 elif isinstance(val, bool):
                     lines.append(f"{key} = {'true' if val else 'false'}")
                 elif isinstance(val, int | float):

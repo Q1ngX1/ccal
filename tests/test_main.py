@@ -70,6 +70,22 @@ class TestResolveInput:
             with pytest.raises((SystemExit, typer.Exit)):
                 _resolve_input(str(img), None)
 
+    def test_image_ocr_runtime_error_exits_cleanly(self, tmp_path, capsys):
+        img = tmp_path / "test.png"
+        img.write_bytes(b"fake")
+        with (
+            patch("src.main.is_image_file", return_value=True),
+            patch(
+                "src.input.ocr.extract_text",
+                side_effect=RuntimeError("Tesseract not found. Install it or set CCAL_TESSERACT_HOME/CCAL_TESSERACT_CMD."),
+            ),
+        ):
+            with pytest.raises((SystemExit, typer.Exit)):
+                _resolve_input(str(img), None)
+        output = capsys.readouterr().out
+        assert "Tesseract not found" in output
+        assert "Traceback" not in output
+
 
 class TestParseWithRetry:
     def test_success_first_try(self):

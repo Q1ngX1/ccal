@@ -21,8 +21,8 @@ def _check_ocr_deps() -> None:
 
 def extract_text(image_path: str, language: str | None = None) -> str:
     """Extract text from an image file using pytesseract OCR."""
-    configure_tesseract_runtime()
     _check_ocr_deps()
+    configure_tesseract_runtime()
     import pytesseract
     from PIL import Image
 
@@ -38,9 +38,7 @@ def extract_text(image_path: str, language: str | None = None) -> str:
         img = Image.open(path)
         text = pytesseract.image_to_string(img, lang=language) if language else pytesseract.image_to_string(img)
     except pytesseract.TesseractNotFoundError as exc:
-        raise RuntimeError(
-            "Tesseract executable not found. Install Tesseract or set CCAL_TESSERACT_HOME/CCAL_TESSERACT_CMD."
-        ) from exc
+        raise RuntimeError("Tesseract not found. Install it or set CCAL_TESSERACT_HOME/CCAL_TESSERACT_CMD.") from None
     return text.strip()
 
 

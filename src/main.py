@@ -164,7 +164,11 @@ def _resolve_input(arg: str | None, language: str | None) -> str:
         from src.input.ocr import extract_text
 
         print(f"[cyan]Extracting text from image:[/cyan] {arg}")
-        text = extract_text(arg, language=language)
+        try:
+            text = extract_text(arg, language=language)
+        except (ImportError, RuntimeError) as exc:
+            print(f"[red]{exc}[/red]")
+            raise typer.Exit(1)
         print(f"[dim]OCR result:[/dim] {text}")
         if not text:
             print("[red]No text could be extracted from the image.[/red]")

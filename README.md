@@ -26,10 +26,16 @@ A CLI tool that turns natural language text or images into calendar events. Powe
 
 ### Official installer
 
-The easiest way to install `ccal` on Linux or macOS is with the official installer:
+The easiest way to install `ccal` is with the official installer for your platform:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh
+```
+
+Windows users can install with PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
 To pin a version or choose a custom destination, pass arguments after `sh -s --`, for example:
@@ -39,7 +45,11 @@ curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --prefix "$HOME/bin"
 ```
 
-Windows users can download the matching `.exe` asset from the GitHub Releases page.
+If you already have Tesseract installed on Windows and want `ccal` to use it, pass the path to `install.ps1`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -TesseractHome "C:\Program Files\Tesseract-OCR"
+```
 
 ### From source
 

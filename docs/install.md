@@ -1,6 +1,6 @@
 # ccal 安装指南
 
-`ccal` 提供独立可执行文件，也提供一个官方的 shell 安装脚本，适用于 Linux 和 macOS。
+`ccal` 提供独立可执行文件，也提供一个官方安装脚本，适用于 Linux、macOS 和 Windows。
 
 ## 推荐安装方式
 
@@ -29,6 +29,30 @@ curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.10
 ```
 
+## Windows 安装器
+
+在 Windows 上运行 PowerShell 安装脚本：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+脚本会下载 Windows release 资产，并默认把 `ccal.exe` 加到当前用户 PATH。
+
+如果你机器上已经安装了 Tesseract，并希望 `ccal` 使用它，可以传入安装目录：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -TesseractHome "C:\Program Files\Tesseract-OCR"
+```
+
+也可以直接指定 `tesseract.exe`：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -TesseractCmd "C:\Program Files\Tesseract-OCR\tesseract.exe"
+```
+
+当前 Windows 官方 release 在构建机安装了 Tesseract 时会自动带上 OCR 支持，所以今天不需要单独的 “OCR 开关”。
+
 ## 直接下载
 
 如果你更喜欢手动下载，可以去 GitHub Releases 页面下载对应平台的资产文件。
@@ -43,5 +67,5 @@ ccal --help
 ## 说明
 
 - Linux 和 macOS 版本以独立可执行文件发布。
-- Windows 用户请下载 GitHub Releases 页面中的 `.exe` 文件。
+- Windows 用户可以使用 `install.ps1`，也可以直接下载 GitHub Releases 页面中的 `.exe` 文件。
 - 如果安装脚本找不到匹配的资产，请确认 release 已发布且平台受支持。
