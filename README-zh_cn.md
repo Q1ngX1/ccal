@@ -118,6 +118,8 @@ ccal config
 |------|------|
 | `ccal add [文本\|图片]` | 解析输入并创建日历事件 |
 | `ccal parse [文本\|图片]` | 解析并展示事件字段，不保存 |
+| `ccal update` | 下载并安装当前平台的最新 standalone 版本 |
+| `ccal uninstall` | 删除当前 standalone 二进制 |
 | `ccal setup` | 交互式配置向导 |
 | `ccal config` | 查看当前配置和平台信息 |
 
@@ -180,3 +182,43 @@ src/
 ## 许可证
 
 MIT
+
+## 安装与卸载补充说明
+
+Linux / macOS 推荐使用官方安装脚本：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh
+```
+
+Windows 推荐使用 PowerShell 安装脚本：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+如果你想更新到最新版本：
+
+```bash
+ccal update
+```
+
+如果你想卸载当前 standalone 版本：
+
+```bash
+ccal uninstall --purge
+```
+
+旧版 Linux standalone 如果还没有 `ccal uninstall`，可以手动清理：
+
+```bash
+sudo rm -f /usr/local/bin/ccal
+rm -f ~/.local/bin/ccal
+rm -rf ~/.config/ccal
+```
+
+Windows 如果已经安装了 Tesseract，可以在安装时配置：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -TesseractHome "C:\Program Files\Tesseract-OCR"
+```

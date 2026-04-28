@@ -266,3 +266,40 @@ LLM 解析后的 `CalendarEvent` 包含以下字段：
 | `recurrence` | string | | 重复规则（RRULE 格式，如 `FREQ=WEEKLY;BYDAY=FR`） |
 | `attendees` | list[string] | | 参与者邮箱列表 |
 | `timezone` | string | | IANA 时区（如 `Asia/Shanghai`），未指定时通过 IP 地理定位自动检测 |
+
+---
+
+## `ccal update`
+
+下载并安装当前平台的最新 standalone release。
+
+```bash
+ccal update
+```
+
+`ccal update` 仅适用于 PyInstaller 构建出的 standalone 版本。如果你是从源码运行，请使用包管理器或开发流程重新安装。
+
+---
+## `ccal uninstall`
+
+删除当前 standalone 版本的 `ccal` 可执行文件。
+
+```bash
+ccal uninstall
+```
+
+使用 `--purge` 可以同时删除本地配置目录：
+
+```bash
+ccal uninstall --purge
+```
+
+如果你要清理更早期的 Linux standalone 版本，或者还没有这个命令，可以手动删除安装目录中的二进制和配置目录：
+
+```bash
+sudo rm -f /usr/local/bin/ccal
+rm -f ~/.local/bin/ccal
+rm -rf ~/.config/ccal
+```
+
+如果你用了自定义前缀，就把那个目录里的 `ccal` 删掉；如果是通过包管理器安装的，就用对应包管理器卸载。
