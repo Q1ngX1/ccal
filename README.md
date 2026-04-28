@@ -43,7 +43,7 @@ If you are using Git Bash or MinGW, call the same command through `powershell.ex
 To pin a version or choose a custom destination, pass arguments after `sh -s --`, for example:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.11
+curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.12
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --prefix "$HOME/bin"
 ```
 

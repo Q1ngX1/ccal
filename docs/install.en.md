@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s
 You can also pin a specific release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.11
+curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.12
 ```
 
 ## Windows installer
