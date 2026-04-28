@@ -191,11 +191,13 @@ Linux / macOS 推荐使用官方安装脚本：
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh
 ```
 
-Windows 推荐使用 PowerShell 安装脚本：
+Windows 推荐直接通过链接运行 PowerShell 安装脚本：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.ps1 | iex"
 ```
+
+如果你在 Git Bash 或 MinGW 里运行，也可以直接通过 `powershell.exe` 调用同一条命令。
 
 如果你想更新到最新版本：
 
@@ -220,5 +222,5 @@ rm -rf ~/.config/ccal
 Windows 如果已经安装了 Tesseract，可以在安装时配置：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -TesseractHome "C:\Program Files\Tesseract-OCR"
+powershell -ExecutionPolicy Bypass -Command "$p = Join-Path $env:TEMP 'install-ccal.ps1'; irm https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.ps1 -OutFile $p; powershell -ExecutionPolicy Bypass -File $p -TesseractHome 'C:\Program Files\Tesseract-OCR'"
 ```

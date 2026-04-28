@@ -32,23 +32,25 @@ The easiest way to install `ccal` is with the official installer for your platfo
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh
 ```
 
-Windows users can install with PowerShell:
+Windows users can install directly with PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.ps1 | iex"
 ```
+
+If you are using Git Bash or MinGW, call the same command through `powershell.exe`.
 
 To pin a version or choose a custom destination, pass arguments after `sh -s --`, for example:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.10
+curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.11
 curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --prefix "$HOME/bin"
 ```
 
-If you already have Tesseract installed on Windows and want `ccal` to use it, pass the path to `install.ps1`:
+If you already have Tesseract installed on Windows and want `ccal` to use it, download the script first and pass the Tesseract path:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -TesseractHome "C:\Program Files\Tesseract-OCR"
+powershell -ExecutionPolicy Bypass -Command "$p = Join-Path $env:TEMP 'install-ccal.ps1'; irm https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.ps1 -OutFile $p; powershell -ExecutionPolicy Bypass -File $p -TesseractHome 'C:\Program Files\Tesseract-OCR'"
 ```
 
 Once installed, you can pull the latest standalone release with:

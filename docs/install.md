@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s
 也可以固定安装某个版本：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.10
+curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.11
 ```
 
 ## Windows 安装器
@@ -34,21 +34,23 @@ curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s
 在 Windows 上运行 PowerShell 安装脚本：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.ps1 | iex"
 ```
 
 脚本会下载 Windows release 资产，并默认把 `ccal.exe` 加到当前用户 PATH。
 
+如果你在 Git Bash 或 MinGW 里运行，也可以直接通过 `powershell.exe` 调用同一条命令。
+
 如果你机器上已经安装了 Tesseract，并希望 `ccal` 使用它，可以传入安装目录：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -TesseractHome "C:\Program Files\Tesseract-OCR"
+powershell -ExecutionPolicy Bypass -Command "$p = Join-Path $env:TEMP 'install-ccal.ps1'; irm https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.ps1 -OutFile $p; powershell -ExecutionPolicy Bypass -File $p -TesseractHome 'C:\Program Files\Tesseract-OCR'"
 ```
 
 也可以直接指定 `tesseract.exe`：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -TesseractCmd "C:\Program Files\Tesseract-OCR\tesseract.exe"
+powershell -ExecutionPolicy Bypass -Command "$p = Join-Path $env:TEMP 'install-ccal.ps1'; irm https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.ps1 -OutFile $p; powershell -ExecutionPolicy Bypass -File $p -TesseractCmd 'C:\Program Files\Tesseract-OCR\tesseract.exe'"
 ```
 
 当前 Windows 官方 release 在构建机安装了 Tesseract 时会自动带上 OCR 支持，所以今天不需要单独的 “OCR 开关”。
