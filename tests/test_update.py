@@ -10,6 +10,7 @@ from src.update import (
     asset_candidates,
     normalize_version,
     select_release_asset,
+    uninstall_current,
     update_latest,
 )
 
@@ -116,3 +117,44 @@ class TestUpdateLatest:
 
         assert "It will replace" in message
         mock_popen.assert_called_once()
+
+
+class TestUninstallCurrent:
+    def test_uninstall_requires_frozen_build(self):
+        with pytest.raises(UpdateError, match="standalone builds only"):
+            uninstall_current()
+
+    def test_uninstall_removes_unix_binary_and_config(self, tmp_path, monkeypatch):
+        target = tmp_path / "ccal"
+        target.write_text("binary")
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        monkeypatch.setattr("src.update.sys.frozen", True, raising=False)
+        monkeypatch.setattr("src.update.sys.executable", str(target), raising=False)
+        monkeypatch.setattr("src.update.platform.system", lambda: "Linux")
+        monkeypatch.setattr("src.update.CONFIG_DIR", config_dir)
+
+        with (
+            patch("src.update.Path.unlink") as mock_unlink,
+            patch("src.update.shutil.rmtree") as mock_rmtree,
+        ):
+            message = uninstall_current(purge=True)
+
+        assert "Removed" in message
+        mock_unlink.assert_called_once_with(missing_ok=True)
+        mock_rmtree.assert_called_once_with(config_dir, ignore_errors=True)
+
+    def test_uninstall_windows_schedules_removal(self, tmp_path, monkeypatch):
+        target = tmp_path / "ccal.exe"
+        target.write_text("binary")
+        config_dir = tmp_path / "config"
+        monkeypatch.setattr("src.update.sys.frozen", True, raising=False)
+        monkeypatch.setattr("src.update.sys.executable", str(target), raising=False)
+        monkeypatch.setattr("src.update.platform.system", lambda: "Windows")
+        monkeypatch.setattr("src.update.CONFIG_DIR", config_dir)
+
+        with patch("src.update.schedule_windows_uninstall") as mock_schedule:
+            message = uninstall_current(purge=True)
+
+        assert "Uninstall scheduled" in message
+        mock_schedule.assert_called_once_with(target.resolve(), config_dir)

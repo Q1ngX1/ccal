@@ -228,6 +228,14 @@ class TestUpdateCommand:
             assert "Updated ccal to 0.1.10." in result.output
 
 
+class TestUninstallCommand:
+    def test_uninstall_command(self):
+        with patch("src.main.uninstall_current", return_value="Removed ccal.exe."):
+            result = runner.invoke(app, ["uninstall", "--yes"])
+            assert result.exit_code == 0
+            assert "Removed ccal.exe." in result.output
+
+
 # ── output_event tests ───────────────────────────────────────────────
 
 class TestOutputEvent:

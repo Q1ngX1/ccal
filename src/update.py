@@ -12,6 +12,8 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from src.config import CONFIG_DIR
+
 
 DEFAULT_REPO = os.environ.get("CCAL_REPO", "Q1ngX1/ccal")
 
@@ -55,6 +57,25 @@ def update_latest(repo: str = DEFAULT_REPO) -> str:
         return f"Updated ccal to {latest_tag}."
     finally:
         shutil.rmtree(download_dir, ignore_errors=True)
+
+
+def uninstall_current(purge: bool = False) -> str:
+    """Remove the current standalone executable, optionally purging config."""
+    if not getattr(sys, "frozen", False):
+        raise UpdateError("ccal uninstall is available for standalone builds only.")
+
+    target = Path(sys.executable).resolve()
+    if is_windows():
+        schedule_windows_uninstall(target, CONFIG_DIR if purge else None)
+        return f"Uninstall scheduled for {target.name}."
+
+    try:
+        target.unlink(missing_ok=True)
+        if purge:
+            shutil.rmtree(CONFIG_DIR, ignore_errors=True)
+        return f"Removed {target.name}."
+    except OSError as exc:
+        raise UpdateError(f"Failed to uninstall ccal: {exc}") from None
 
 
 def current_version() -> str | None:
@@ -177,6 +198,40 @@ Remove-Item -Recurse -Force -LiteralPath $parent -ErrorAction SilentlyContinue
         )
     except FileNotFoundError as exc:
         raise UpdateError("PowerShell is required to update ccal on Windows.") from exc
+
+
+def schedule_windows_uninstall(target: Path, config_dir: Path | None = None) -> None:
+    """Remove the current Windows executable after the current process exits."""
+    config_line = ""
+    if config_dir is not None:
+        config_line = f"Remove-Item -Recurse -Force -LiteralPath '{_ps_quote(str(config_dir))}' -ErrorAction SilentlyContinue"
+
+    script = f"""
+$pid = {os.getpid()}
+$target = '{_ps_quote(str(target))}'
+while (Get-Process -Id $pid -ErrorAction SilentlyContinue) {{
+    Start-Sleep -Milliseconds 300
+}}
+Remove-Item -Force -LiteralPath $target -ErrorAction SilentlyContinue
+{config_line}
+"""
+    try:
+        subprocess.Popen(
+            [
+                "powershell.exe",
+                "-NoLogo",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-WindowStyle",
+                "Hidden",
+                "-Command",
+                script,
+            ],
+            close_fds=True,
+        )
+    except FileNotFoundError as exc:
+        raise UpdateError("PowerShell is required to uninstall ccal on Windows.") from exc
 
 
 def is_windows() -> bool:

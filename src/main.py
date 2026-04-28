@@ -150,6 +150,12 @@ def update_latest() -> str:
     return update_latest_impl()
 
 
+def uninstall_current(purge: bool = False) -> str:
+    from src.update import uninstall_current as uninstall_current_impl
+
+    return uninstall_current_impl(purge=purge)
+
+
 def read_stdin() -> str | None:
     """Read text from stdin if piped."""
     if not sys.stdin.isatty():
@@ -245,6 +251,24 @@ def update():
     """Update ccal to the latest standalone release."""
     try:
         message = update_latest()
+    except Exception as exc:
+        print(f"[red]{exc}[/red]")
+        raise typer.Exit(1)
+    print(f"[green]{message}[/green]")
+
+
+@app.command()
+def uninstall(
+    purge: Annotated[bool, typer.Option("--purge", help="Remove cached config and related local files.")] = False,
+    yes: Annotated[bool, typer.Option("-y", "--yes", help="Skip confirmation.")] = False,
+):
+    """Uninstall the current standalone ccal binary."""
+    if not yes:
+        if not typer.confirm("Uninstall ccal and remove the current binary?", default=False):
+            raise typer.Exit(0)
+
+    try:
+        message = uninstall_current(purge=purge)
     except Exception as exc:
         print(f"[red]{exc}[/red]")
         raise typer.Exit(1)

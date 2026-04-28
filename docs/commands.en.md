@@ -217,6 +217,32 @@ If you are running from source, reinstall with your package manager or developme
 
 ---
 
+## `ccal uninstall`
+
+Remove the current standalone binary.
+
+```bash
+ccal uninstall
+```
+
+Use `--purge` to also remove the local ccal config directory:
+
+```bash
+ccal uninstall --purge
+```
+
+If you are removing an older Linux install that predates this command, delete the installed binary manually:
+
+```bash
+sudo rm -f /usr/local/bin/ccal
+rm -f ~/.local/bin/ccal
+rm -rf ~/.config/ccal
+```
+
+Use the path that matches your install location. If you used a custom prefix, remove `ccal` from that directory. If you installed through a package manager, remove it with that package manager.
+
+---
+
 ## Output Targets
 
 ### ICS File

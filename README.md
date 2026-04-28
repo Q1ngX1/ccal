@@ -57,6 +57,22 @@ Once installed, you can pull the latest standalone release with:
 ccal update
 ```
 
+To remove a standalone install, run:
+
+```bash
+ccal uninstall --purge
+```
+
+If you installed an older Linux release before `ccal uninstall` existed, remove it manually:
+
+```bash
+sudo rm -f /usr/local/bin/ccal
+rm -f ~/.local/bin/ccal
+rm -rf ~/.config/ccal
+```
+
+Use the path that matches where you installed `ccal`. If you used a custom prefix, delete the binary from that directory instead. If you installed through a package manager, remove it with that tool.
+
 ### From source
 
 If you want to develop locally or run from source:
@@ -160,6 +176,7 @@ ccal config
 | `ccal add [text\|image]` | Parse input and create a calendar event |
 | `ccal parse [text\|image]` | Parse and display event fields without saving |
 | `ccal update` | Download and install the latest standalone release |
+| `ccal uninstall` | Remove the current standalone binary |
 | `ccal setup` | Interactive configuration wizard |
 | `ccal config` | Show current configuration and platform info |
 
