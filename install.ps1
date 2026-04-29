@@ -38,11 +38,27 @@ function Get-Architecture {
     }
 }
 
-function Get-AssetCandidates([string]$Arch) {
+function Get-AssetCandidates([string]$Arch, [string]$VersionTag) {
+    $version = if ($VersionTag.StartsWith('v')) { $VersionTag } else { "v$VersionTag" }
+    $versionPrefix = "ccal-$version-windows"
     if ($Arch -eq 'arm64') {
-        return @('ccal-windows-arm64.exe', 'ccal-windows-arm64')
+        return @(
+            "$versionPrefix-arm64.exe",
+            "$versionPrefix-arm64",
+            'ccal-windows-arm64.exe',
+            'ccal-windows-arm64'
+        )
     }
-    return @('ccal-windows-x64.exe', 'ccal-windows-x64')
+    return @(
+        "$versionPrefix-x64.exe",
+        "$versionPrefix-x64",
+        "$versionPrefix-x86_64.exe",
+        "$versionPrefix-x86_64",
+        'ccal-windows-x64.exe',
+        'ccal-windows-x64',
+        'ccal-windows-x86_64.exe',
+        'ccal-windows-x86_64'
+    )
 }
 
 function Select-Asset([object[]]$Assets, [string[]]$Candidates) {
@@ -120,7 +136,7 @@ function Configure-TesseractRuntime {
 
 $release = Get-Release -Repo $Repository -Tag $Version
 $arch = Get-Architecture
-$asset = Select-Asset -Assets $release.assets -Candidates (Get-AssetCandidates -Arch $arch)
+$asset = Select-Asset -Assets $release.assets -Candidates (Get-AssetCandidates -Arch $arch -VersionTag $release.tag_name)
 if (-not $asset) {
     Fail "could not find a Windows release asset for $arch"
 }
