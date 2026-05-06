@@ -142,6 +142,18 @@ class TestParseEvent:
             assert call_kwargs["model"] == "anthropic/claude-sonnet-4-20250514"
             assert call_kwargs["api_key"] == "sk-anthro"
 
+    def test_openrouter_unknown_encoding_raises_clear_error(self, mock_config, mock_geo):
+        error = RuntimeError("OpenrouterException - Unknown encoding cl100k_base.")
+
+        with (
+            patch("src.models.llm.load_config", return_value=mock_config),
+            patch("src.models.llm.get_api_key", return_value="sk-test"),
+            patch("src.input.geo.get_geo_info", return_value=mock_geo),
+            patch("src.models.llm.litellm.completion", side_effect=error),
+        ):
+            with pytest.raises(RuntimeError, match="OpenRouter tokenizer support is unavailable"):
+                parse_event("test")
+
     def test_api_base_passed(self, mock_config, mock_geo):
         mock_config["llm"]["api_base"] = "http://localhost:11434"
         event_json = json.dumps({

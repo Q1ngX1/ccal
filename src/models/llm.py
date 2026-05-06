@@ -83,7 +83,16 @@ def parse_event(text: str, provider: str | None = None, model: str | None = None
     if api_base:
         completion_kwargs["api_base"] = api_base
 
-    response = litellm.completion(**completion_kwargs)
+    try:
+        response = litellm.completion(**completion_kwargs)
+    except Exception as exc:
+        error_text = str(exc)
+        if "Unknown encoding cl100k_base" in error_text:
+            raise RuntimeError(
+                "OpenRouter tokenizer support is unavailable in this build. "
+                "Update ccal to the latest release or switch to another provider."
+            ) from exc
+        raise
 
     content = response.choices[0].message.content.strip()
 
