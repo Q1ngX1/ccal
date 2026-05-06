@@ -177,9 +177,16 @@ $parent = Split-Path -Parent $source
 while (Get-Process -Id $ccalPid -ErrorAction SilentlyContinue) {{
     Start-Sleep -Milliseconds 300
 }}
-Copy-Item -Force -LiteralPath $source -Destination $target
-Remove-Item -Force -LiteralPath $source -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force -LiteralPath $parent -ErrorAction SilentlyContinue
+for ($attempt = 0; $attempt -lt 30; $attempt++) {{
+    try {{
+        Copy-Item -Force -LiteralPath $source -Destination $target -ErrorAction Stop
+        Remove-Item -Force -LiteralPath $source -ErrorAction Stop
+        Remove-Item -Recurse -Force -LiteralPath $parent -ErrorAction SilentlyContinue
+        break
+    }} catch {{
+        Start-Sleep -Milliseconds 500
+    }}
+}}
 """
     try:
         subprocess.Popen(
@@ -194,6 +201,7 @@ Remove-Item -Recurse -Force -LiteralPath $parent -ErrorAction SilentlyContinue
                 "-Command",
                 script,
             ],
+            creationflags=_windows_detach_flags(),
             close_fds=True,
         )
     except FileNotFoundError as exc:
@@ -212,7 +220,14 @@ $target = '{_ps_quote(str(target))}'
 while (Get-Process -Id $ccalPid -ErrorAction SilentlyContinue) {{
     Start-Sleep -Milliseconds 300
 }}
-Remove-Item -Force -LiteralPath $target -ErrorAction SilentlyContinue
+for ($attempt = 0; $attempt -lt 30; $attempt++) {{
+    try {{
+        Remove-Item -Force -LiteralPath $target -ErrorAction Stop
+        break
+    }} catch {{
+        Start-Sleep -Milliseconds 500
+    }}
+}}
 {config_line}
 """
     try:
@@ -228,6 +243,7 @@ Remove-Item -Force -LiteralPath $target -ErrorAction SilentlyContinue
                 "-Command",
                 script,
             ],
+            creationflags=_windows_detach_flags(),
             close_fds=True,
         )
     except FileNotFoundError as exc:
@@ -236,6 +252,13 @@ Remove-Item -Force -LiteralPath $target -ErrorAction SilentlyContinue
 
 def is_windows() -> bool:
     return platform.system().lower().startswith("win")
+
+
+def _windows_detach_flags() -> int:
+    flags = 0
+    flags |= getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+    flags |= getattr(subprocess, "DETACHED_PROCESS", 0)
+    return flags
 
 
 def _ps_quote(value: str) -> str:

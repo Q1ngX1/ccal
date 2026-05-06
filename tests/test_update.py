@@ -10,6 +10,7 @@ from src.update import (
     asset_candidates,
     normalize_version,
     select_release_asset,
+    schedule_windows_swap,
     schedule_windows_uninstall,
     uninstall_current,
     update_latest,
@@ -170,3 +171,17 @@ class TestUninstallCurrent:
         script = mock_popen.call_args[0][0][-1]
         assert "$ccalPid" in script
         assert "$pid =" not in script
+        assert mock_popen.call_args.kwargs["creationflags"] != 0
+
+    def test_windows_swap_uses_safe_pid_variable_and_detach_flags(self, tmp_path, monkeypatch):
+        source = tmp_path / "download.exe"
+        target = tmp_path / "ccal.exe"
+        monkeypatch.setattr("src.update.os.getpid", lambda: 4242)
+
+        with patch("src.update.subprocess.Popen") as mock_popen:
+            schedule_windows_swap(source.resolve(), target.resolve())
+
+        script = mock_popen.call_args[0][0][-1]
+        assert "$ccalPid" in script
+        assert "$pid =" not in script
+        assert mock_popen.call_args.kwargs["creationflags"] != 0
