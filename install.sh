@@ -15,7 +15,7 @@ Install the latest ccal release binary for the current platform.
 
 Options:
   --repo OWNER/REPO     GitHub repository to install from (default: Q1ngX1/ccal)
-  --version TAG         Release tag to install, such as v0.1.13 (default: latest)
+  --version TAG         Release tag to install, such as v0.1.14 (default: latest)
   --prefix DIR          Installation directory
   --bindir DIR          Alias for --prefix
   -h, --help            Show this help message
@@ -29,7 +29,7 @@ Environment variables:
 
 Examples:
   curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh
-  curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.13
+  curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.14
   curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --prefix "$HOME/.local/bin"
 EOF
 }

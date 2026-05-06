@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s
 也可以固定安装某个版本：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.13
+curl -fsSL https://raw.githubusercontent.com/Q1ngX1/ccal/main/install.sh | sh -s -- --version v0.1.14
 ```
 
 ## Windows 安装器

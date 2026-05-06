@@ -170,11 +170,11 @@ def download_file(url: str, destination: Path) -> None:
 def schedule_windows_swap(source: Path, target: Path) -> None:
     """Replace the running Windows executable after the current process exits."""
     script = f"""
-$pid = {os.getpid()}
+$ccalPid = {os.getpid()}
 $source = '{_ps_quote(str(source))}'
 $target = '{_ps_quote(str(target))}'
 $parent = Split-Path -Parent $source
-while (Get-Process -Id $pid -ErrorAction SilentlyContinue) {{
+while (Get-Process -Id $ccalPid -ErrorAction SilentlyContinue) {{
     Start-Sleep -Milliseconds 300
 }}
 Copy-Item -Force -LiteralPath $source -Destination $target
@@ -207,9 +207,9 @@ def schedule_windows_uninstall(target: Path, config_dir: Path | None = None) -> 
         config_line = f"Remove-Item -Recurse -Force -LiteralPath '{_ps_quote(str(config_dir))}' -ErrorAction SilentlyContinue"
 
     script = f"""
-$pid = {os.getpid()}
+$ccalPid = {os.getpid()}
 $target = '{_ps_quote(str(target))}'
-while (Get-Process -Id $pid -ErrorAction SilentlyContinue) {{
+while (Get-Process -Id $ccalPid -ErrorAction SilentlyContinue) {{
     Start-Sleep -Milliseconds 300
 }}
 Remove-Item -Force -LiteralPath $target -ErrorAction SilentlyContinue

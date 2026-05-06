@@ -10,6 +10,7 @@ from src.update import (
     asset_candidates,
     normalize_version,
     select_release_asset,
+    schedule_windows_uninstall,
     uninstall_current,
     update_latest,
 )
@@ -158,3 +159,14 @@ class TestUninstallCurrent:
 
         assert "Uninstall scheduled" in message
         mock_schedule.assert_called_once_with(target.resolve(), config_dir)
+
+    def test_windows_uninstall_script_uses_safe_pid_variable(self, tmp_path, monkeypatch):
+        target = tmp_path / "ccal.exe"
+        monkeypatch.setattr("src.update.os.getpid", lambda: 4242)
+
+        with patch("src.update.subprocess.Popen") as mock_popen:
+            schedule_windows_uninstall(target.resolve(), None)
+
+        script = mock_popen.call_args[0][0][-1]
+        assert "$ccalPid" in script
+        assert "$pid =" not in script
