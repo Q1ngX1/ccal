@@ -15,6 +15,11 @@ from typing import Any
 
 from src.config import CONFIG_DIR
 
+try:
+    from src import _version as _ccal_version_module
+    _FROZEN_VERSION: str | None = _ccal_version_module.__version__
+except ImportError:
+    _FROZEN_VERSION = None
 
 DEFAULT_REPO = os.environ.get("CCAL_REPO", "Q1ngX1/ccal")
 
@@ -82,6 +87,8 @@ def uninstall_current(purge: bool = False) -> str:
 
 def current_version() -> str | None:
     """Return the installed package version when available."""
+    if getattr(sys, "frozen", False) and _FROZEN_VERSION:
+        return _FROZEN_VERSION
     try:
         return importlib.metadata.version("ccal")
     except importlib.metadata.PackageNotFoundError:

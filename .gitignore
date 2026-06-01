@@ -20,6 +20,9 @@ htmlcov/
 ccal.spec
 *.spec
 
+# Generated at CI build time
+src/_version.py
+
 # IDE
 .vscode/
 .idea/
