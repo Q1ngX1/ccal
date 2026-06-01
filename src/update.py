@@ -69,7 +69,7 @@ def uninstall_current(purge: bool = False) -> str:
     target = Path(sys.executable).resolve()
     if is_windows():
         schedule_windows_uninstall(target, CONFIG_DIR if purge else None)
-        return f"Uninstall scheduled for {target.name}."
+        return f"ccal will be removed from {target.parent} after this process exits."
 
     try:
         target.unlink(missing_ok=True)
@@ -222,20 +222,26 @@ for ($attempt = 0; $attempt -lt 30; $attempt++) {{
 
 
 def schedule_windows_uninstall(target: Path, config_dir: Path | None = None) -> None:
-    """Remove the current Windows executable after the current process exits."""
+    """Remove the ccal install directory and PATH entry after the current process exits."""
+    install_dir = target.parent
     config_line = ""
     if config_dir is not None:
         config_line = f"Remove-Item -Recurse -Force -LiteralPath '{_ps_quote(str(config_dir))}' -ErrorAction SilentlyContinue"
 
     script = f"""
 $ccalPid = {os.getpid()}
-$target = '{_ps_quote(str(target))}'
+$installDir = '{_ps_quote(str(install_dir))}'
+$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+if ($userPath) {{
+    $newPath = ($userPath -split ';' | Where-Object {{ $_ -and $_.TrimEnd('\\') -ne $installDir.TrimEnd('\\') }}) -join ';'
+    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+}}
 while (Get-Process -Id $ccalPid -ErrorAction SilentlyContinue) {{
     Start-Sleep -Milliseconds 300
 }}
 for ($attempt = 0; $attempt -lt 30; $attempt++) {{
     try {{
-        Remove-Item -Force -LiteralPath $target -ErrorAction Stop
+        Remove-Item -Recurse -Force -LiteralPath $installDir -ErrorAction Stop
         break
     }} catch {{
         Start-Sleep -Milliseconds 500
