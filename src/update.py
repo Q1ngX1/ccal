@@ -28,14 +28,15 @@ def update_latest(repo: str = DEFAULT_REPO) -> str:
         raise UpdateError("ccal update is available for standalone builds only.")
 
     release = fetch_latest_release(repo)
-    latest_tag = normalize_version(str(release.get("tag_name") or release.get("name") or ""))
+    tag_name = str(release.get("tag_name") or release.get("name") or "")
+    latest_tag = normalize_version(tag_name)
     current_tag = normalize_version(current_version())
 
     if current_tag and current_tag == latest_tag:
         return f"ccal {current_tag} is already up to date."
 
     platform_key = detect_platform_key()
-    asset = select_release_asset(release.get("assets", []), platform_key)
+    asset = select_release_asset(release.get("assets", []), platform_key, tag_name=tag_name)
     if not asset:
         raise UpdateError("No release asset found for this platform.")
 
@@ -132,10 +133,14 @@ def normalize_version(value: str | None) -> str:
     return value[1:] if value.startswith("v") else value
 
 
-def select_release_asset(assets: list[dict[str, Any]] | Any, platform_key: tuple[str, str]) -> dict[str, Any] | None:
+def select_release_asset(
+    assets: list[dict[str, Any]] | Any,
+    platform_key: tuple[str, str],
+    tag_name: str | None = None,
+) -> dict[str, Any] | None:
     """Choose the best release asset for the current platform."""
     os_name, arch = platform_key
-    candidates = asset_candidates(os_name, arch)
+    candidates = asset_candidates(os_name, arch, tag_name)
     for candidate in candidates:
         for asset in assets:
             if asset.get("name") == candidate:
@@ -143,17 +148,24 @@ def select_release_asset(assets: list[dict[str, Any]] | Any, platform_key: tuple
     return None
 
 
-def asset_candidates(os_name: str, arch: str) -> list[str]:
+def asset_candidates(os_name: str, arch: str, tag_name: str | None = None) -> list[str]:
+    v = (tag_name if tag_name.startswith("v") else f"v{tag_name}") if tag_name else ""
+
     if os_name == "windows":
-        return [f"ccal-windows-{arch}.exe", f"ccal-windows-{arch}"]
+        versioned = [f"ccal-{v}-windows-x86_64.exe", f"ccal-{v}-windows-{arch}.exe", f"ccal-{v}-windows-{arch}"] if v else []
+        return versioned + [f"ccal-windows-{arch}.exe", f"ccal-windows-{arch}"]
     if os_name == "linux":
         if arch == "x64":
-            return ["ccal-linux-x64", "ccal-linux-x86_64", "ccal-linux"]
-        return ["ccal-linux-arm64", "ccal-linux-aarch64", "ccal-linux"]
+            versioned = [f"ccal-{v}-linux-x86_64", f"ccal-{v}-linux-x64"] if v else []
+            return versioned + ["ccal-linux-x64", "ccal-linux-x86_64", "ccal-linux"]
+        versioned = [f"ccal-{v}-linux-arm64", f"ccal-{v}-linux-aarch64"] if v else []
+        return versioned + ["ccal-linux-arm64", "ccal-linux-aarch64", "ccal-linux"]
     if os_name == "macos":
         if arch == "x64":
-            return ["ccal-macos-x86_64", "ccal-macos-x64", "ccal-macos"]
-        return ["ccal-macos-arm64", "ccal-macos-aarch64", "ccal-macos"]
+            versioned = [f"ccal-{v}-macos-x86_64", f"ccal-{v}-macos-x64"] if v else []
+            return versioned + ["ccal-macos-x86_64", "ccal-macos-x64", "ccal-macos"]
+        versioned = [f"ccal-{v}-macos-arm64", f"ccal-{v}-macos-aarch64"] if v else []
+        return versioned + ["ccal-macos-arm64", "ccal-macos-aarch64", "ccal-macos"]
     raise UpdateError(f"Unsupported platform: {os_name}")
 
 

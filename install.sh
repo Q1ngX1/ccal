@@ -97,7 +97,7 @@ normalize_os() {
     Linux*) printf '%s' "linux" ;;
     Darwin*) printf '%s' "macos" ;;
     MINGW*|MSYS*|CYGWIN*)
-      die "install.sh supports Linux and macOS only (detected: ${os_name}); on Windows download the .exe release asset instead"
+      die "install.sh supports Linux and macOS only (detected: ${os_name}); on Windows run install.ps1 instead (see README)"
       ;;
     *) die "install.sh supports Linux and macOS only (detected: ${os_name})" ;;
   esac
