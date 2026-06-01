@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import importlib.metadata
 import os
 import platform
@@ -210,8 +211,8 @@ for ($attempt = 0; $attempt -lt 30; $attempt++) {{
                 "Bypass",
                 "-WindowStyle",
                 "Hidden",
-                "-Command",
-                script,
+                "-EncodedCommand",
+                _encode_ps(script),
             ],
             creationflags=_windows_detach_flags(),
             close_fds=True,
@@ -252,8 +253,8 @@ for ($attempt = 0; $attempt -lt 30; $attempt++) {{
                 "Bypass",
                 "-WindowStyle",
                 "Hidden",
-                "-Command",
-                script,
+                "-EncodedCommand",
+                _encode_ps(script),
             ],
             creationflags=_windows_detach_flags(),
             close_fds=True,
@@ -275,3 +276,8 @@ def _windows_detach_flags() -> int:
 
 def _ps_quote(value: str) -> str:
     return value.replace("'", "''")
+
+
+def _encode_ps(script: str) -> str:
+    """Base64-encode a PowerShell script for -EncodedCommand, avoiding cmdline quoting issues."""
+    return base64.b64encode(script.encode("utf-16-le")).decode("ascii")
